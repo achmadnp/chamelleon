@@ -1,0 +1,44 @@
+
+# Binaries and Executors
+*.exe
+*.dll
+*.so
+*.dylib
+*.bin
+
+# Temp files and Logs
+*.log
+*.tmp
+*.temp
+.DS_Store
+
+# Node/Frontend
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/.next/
+frontend/out/
+
+# Go/Wails Build Artifacts
+build/
+bin/
+
+# Environment files
+.env
+.env.local
+
+# Large Media Files
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.iso
+*.wmv
+
+# Output Directory
+output/
+
+# Specific Large Files
+sgTest.ts
+sgTest_compressed.mp4
+testvid.mp4
