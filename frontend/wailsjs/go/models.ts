@@ -1,21 +1,5 @@
-export namespace main {
+export namespace job {
 	
-	export class ConvertRequest {
-	    Filename: string;
-	    Data: number[];
-	    Format: string;
-	
-	    static createFrom(source: any = {}) {
-	        return new ConvertRequest(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.Filename = source["Filename"];
-	        this.Data = source["Data"];
-	        this.Format = source["Format"];
-	    }
-	}
 	export class Progress {
 	    id: string;
 	    input: string;

@@ -17,7 +17,7 @@ import {
   CancelCompress,
   CompressVideo,
   HandleSelectFile,
-} from "../../wailsjs/go/main/App";
+} from "../../wailsjs/go/handlers/App";
 
 import { EventsOff, EventsOn } from "../../wailsjs/runtime/runtime";
 import { toast } from "sonner";

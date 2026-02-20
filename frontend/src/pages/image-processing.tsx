@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { useState } from "react";
-import { AdjustImage } from "../../wailsjs/go/main/App";
+import { AdjustImage } from "../../wailsjs/go/handlers/App";
 import { SaveIcon } from "lucide-react";
 
 export default function ImageProcessingPage() {

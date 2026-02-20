@@ -2,7 +2,10 @@ import { Button } from "@/components/ui/button";
 
 import { Label } from "@/components/ui/label";
 import { useEffect, useState } from "react";
-import { ConvertVideoV2, HandleSelectFile } from "../../wailsjs/go/main/App";
+import {
+  ConvertVideoV2,
+  HandleSelectFile,
+} from "../../wailsjs/go/handlers/App";
 import { Trash2Icon } from "lucide-react";
 import { EventsOff, EventsOn } from "../../wailsjs/runtime/runtime";
 import { CircularProgress } from "@/components/ui/progress";
@@ -122,6 +125,9 @@ export default function ConvertVideoPage() {
       <h1 className="mb-4 text-3xl font-bold text-center">
         Convert Video Format
       </h1>
+      <Button>
+        <a href="/compress-video">Supported Formats</a>
+      </Button>
       <div className="grid grid-cols-1 gap-4">
         <div className="flex col-span-1 text-center">
           <Button
@@ -192,8 +198,8 @@ export default function ConvertVideoPage() {
               {status === "running"
                 ? "Converting Video..."
                 : status === "done"
-                ? "Video converted"
-                : "Error!"}
+                  ? "Video converted"
+                  : "Error!"}
 
               <Button
                 variant="destructive"
