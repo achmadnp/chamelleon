@@ -26,8 +26,16 @@ export function ChangeImageFormat(arg1, arg2, arg3) {
   return window['go']['handlers']['App']['ChangeImageFormat'](arg1, arg2, arg3);
 }
 
+export function CompressImage(arg1, arg2, arg3, arg4) {
+  return window['go']['handlers']['App']['CompressImage'](arg1, arg2, arg3, arg4);
+}
+
 export function CompressVideo(arg1, arg2) {
   return window['go']['handlers']['App']['CompressVideo'](arg1, arg2);
+}
+
+export function ConvertImage(arg1, arg2) {
+  return window['go']['handlers']['App']['ConvertImage'](arg1, arg2);
 }
 
 export function ConvertVideoV2(arg1, arg2) {
@@ -46,6 +54,26 @@ export function HandleSelectFile() {
   return window['go']['handlers']['App']['HandleSelectFile']();
 }
 
+export function HandleSelectImageFile() {
+  return window['go']['handlers']['App']['HandleSelectImageFile']();
+}
+
+export function HandleSelectVideoFile() {
+  return window['go']['handlers']['App']['HandleSelectVideoFile']();
+}
+
+export function ProbeVideoDuration(arg1) {
+  return window['go']['handlers']['App']['ProbeVideoDuration'](arg1);
+}
+
 export function SaveProcessedImage(arg1, arg2) {
   return window['go']['handlers']['App']['SaveProcessedImage'](arg1, arg2);
+}
+
+export function TrimVideo(arg1, arg2, arg3) {
+  return window['go']['handlers']['App']['TrimVideo'](arg1, arg2, arg3);
+}
+
+export function VideoToGif(arg1, arg2, arg3, arg4, arg5) {
+  return window['go']['handlers']['App']['VideoToGif'](arg1, arg2, arg3, arg4, arg5);
 }
