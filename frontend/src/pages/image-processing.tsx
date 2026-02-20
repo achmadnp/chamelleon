@@ -13,9 +13,43 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
+import { PageShell, SectionCard } from "@/components/ui/page-shell";
 import { useState } from "react";
 import { AdjustImage } from "../../wailsjs/go/handlers/App";
-import { SaveIcon } from "lucide-react";
+import {
+  Palette,
+  SaveIcon,
+  ImageIcon,
+  Eye,
+  Sun,
+  Contrast,
+  Droplets,
+  Sparkles,
+  Loader2,
+} from "lucide-react";
+import { toast } from "sonner";
+
+const ADJUSTMENTS_CONFIG = [
+  { key: "brightness", label: "Brightness", icon: Sun, min: -1, max: 1, step: 0.01, default: 0 },
+  { key: "contrast", label: "Contrast", icon: Contrast, min: -1, max: 1, step: 0.1, default: 0 },
+  { key: "gamma", label: "Gamma", icon: Sparkles, min: 0.1, max: 5.0, step: 0.1, default: 2.4 },
+  { key: "saturation", label: "Saturation", icon: Droplets, min: -100, max: 100, step: 1, default: 0 },
+  { key: "hue", label: "Hue", icon: Palette, min: -360, max: 360, step: 1, default: 0 },
+] as const;
+
+const BLEND_MODES = [
+  "add", "color-burn", "color-dodge", "darken", "lighten",
+  "difference", "exclusion", "linear-burn", "linear-light",
+  "Multiply", "normal", "opacity", "overlay", "screen",
+  "soft-light", "substract",
+];
+
+const BLUR_MODES = ["gaussian", "box"];
+
+const EFFECTS = [
+  "dilate", "edge-detection", "emboss", "erode", "invert",
+  "median", "sepia", "sharpen", "sobel", "unsharp-mark",
+];
 
 export default function ImageProcessingPage() {
   const [imgConfig, setImgConfig] = useState({
@@ -35,463 +69,264 @@ export default function ImageProcessingPage() {
   });
 
   const [processedImg, setProcessedImg] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleImageDrop = (files: File[]) => {
-    if (files.length === 0) {
-      console.error("No files selected.");
-      return;
-    }
-
+    if (files.length === 0) return;
     const file = files[0];
     setImgConfig((prev) => ({ ...prev, file }));
 
     const reader = new FileReader();
-    if (!file) {
-      console.error("No image file selected.");
-      return;
-    }
     reader.readAsDataURL(file);
-
-    reader.onload = () => {
-      const base64Image = reader.result as string;
-      setProcessedImg(base64Image);
-    };
+    reader.onload = () => setProcessedImg(reader.result as string);
   };
 
-  const handleSavedImage = async () => {
-    if (!processedImg) {
-      console.error("No processed image to save.");
-      return;
-    }
+  const handleReset = () => {
+    setImgConfig({ format: "", file: null, blendMode: "", blurMode: "", effect: "" });
+    setProcessedImg(null);
+    setAdjustments({ brightness: 0, contrast: 0, gamma: 2.4, saturation: 0, hue: 0 });
+  };
+
+  const handleSavedImage = () => {
+    if (!processedImg) return;
     const link = document.createElement("a");
     link.href = processedImg;
-    link.download =
-      `transformed_${imgConfig.file?.name}` || "processed_image.png";
+    link.download = `transformed_${imgConfig.file?.name}` || "processed_image.png";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    toast.success("Image saved!");
   };
 
   const handleImageAdjustments = async () => {
-    console.log("Adjustments: ", adjustments);
-    const reader = new FileReader();
+    if (!imgConfig.file) return;
+    setIsProcessing(true);
 
-    if (!imgConfig.file) {
-      console.error("No image file selected.");
-      return;
-    }
+    const reader = new FileReader();
     reader.readAsDataURL(imgConfig.file);
     reader.onload = async function () {
-      const base64Image = reader.result as string;
-      console.log("Base64 Image: ", base64Image);
-
-      // Here you would typically send the base64Image and adjustments to your backend
-      // For example:
-      // const response = await processImage(base64Image, adjustments, imgConfig);
-      // console.log("Processed Image Response: ", response);
-      const res = await AdjustImage(
-        "base64Image",
-        base64Image,
-        adjustments.brightness,
-        adjustments.contrast,
-        adjustments.gamma,
-        adjustments.saturation,
-        adjustments.hue
-      );
-      if (!res) {
-        console.error("Image processing failed.");
-        return;
+      try {
+        const base64Image = reader.result as string;
+        const res = await AdjustImage(
+          "base64Image",
+          base64Image,
+          adjustments.brightness,
+          adjustments.contrast,
+          adjustments.gamma,
+          adjustments.saturation,
+          adjustments.hue
+        );
+        if (!res) {
+          toast.error("Image processing failed.");
+          return;
+        }
+        setProcessedImg(`data:image/png;base64,${res}`);
+      } catch (err) {
+        toast.error("Processing failed: " + String(err));
+      } finally {
+        setIsProcessing(false);
       }
+    };
+    reader.onerror = () => {
+      toast.error("Failed to read image file.");
+      setIsProcessing(false);
+    };
+  };
 
-      setProcessedImg(`data:image/png;base64,${res}`);
-    };
-    reader.onerror = function (error) {
-      console.log("Error: ", error);
-    };
-    console.log(imgConfig.file);
+  const clampValue = (value: string, min: number, max: number, fallback: number) => {
+    if (!value) return fallback;
+    const n = parseFloat(value);
+    if (isNaN(n)) return fallback;
+    return Math.min(Math.max(n, min), max);
   };
 
   return (
-    <div className="flex-1 w-full p-8">
-      <h1 className="mb-4 text-3xl font-bold text-center">Image Processing</h1>
-      <div className="grid grid-cols-1 gap-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <h2 className="mb-2 text-2xl font-semibold text-center">
-              Image Input
-            </h2>
+    <PageShell
+      title="Image Processing"
+      subtitle="Adjust brightness, contrast, effects and more"
+      icon={Palette}
+    >
+      <div className="space-y-5">
+        {/* Source / Output Grid */}
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+          <SectionCard>
+            <div className="flex items-center gap-2 mb-3">
+              <ImageIcon className="w-4 h-4 text-primary" />
+              <h3 className="text-sm font-semibold">Image Input</h3>
+            </div>
             {imgConfig.file ? (
-              <SingleImagePreview
-                image={imgConfig.file}
-                onRemove={() =>
-                  setImgConfig({
-                    format: "",
-                    file: null,
-                    blendMode: "",
-                    blurMode: "",
-                    effect: "",
-                  })
-                }
-              />
+              <SingleImagePreview image={imgConfig.file} onRemove={handleReset} />
             ) : (
-              <FileDropzone
-                className="col-span-1"
-                onFilesAdded={handleImageDrop}
-              />
+              <FileDropzone onFilesAdded={handleImageDrop} />
             )}
-          </div>
-          <div>
-            <h2 className="mb-2 text-2xl font-semibold text-center">
-              Processed
-            </h2>
+          </SectionCard>
+
+          <SectionCard>
+            <div className="flex items-center gap-2 mb-3">
+              <Eye className="w-4 h-4 text-primary" />
+              <h3 className="text-sm font-semibold">Preview</h3>
+            </div>
             {processedImg ? (
-              <div className="flex flex-col items-center space-y-4 border rounded-xl">
-                <img
-                  src={`${processedImg}`}
-                  alt="Processed"
-                  className="w-full h-auto rounded-lg"
-                />
-                <Button onClick={handleSavedImage} className="flex">
+              <div className="space-y-3 animate-scale-in">
+                <div className="overflow-hidden border rounded-lg border-border/40">
+                  <img src={processedImg} alt="Processed" className="w-full h-auto" />
+                </div>
+                <Button onClick={handleSavedImage} className="w-full" variant="default">
                   <SaveIcon className="w-4 h-4 mr-2" />
-                  Save
+                  Save Image
                 </Button>
               </div>
             ) : (
-              <div className="flex min-h-[240px] flex-col items-center space-y-4 border rounded-xl">
-                <div className="flex-col m-auto">
-                  <div>Currently no image is processed.</div>
-                  <div>Please upload an image to process it.</div>
-                </div>
+              <div className="flex min-h-[200px] flex-col items-center justify-center space-y-2 border border-dashed rounded-lg border-border/40 bg-muted/10">
+                <Palette className="w-8 h-8 text-muted-foreground/30" />
+                <p className="text-xs text-muted-foreground">Upload an image to preview</p>
               </div>
             )}
+          </SectionCard>
+        </div>
+
+        {/* Adjustment Controls */}
+        <SectionCard title="Adjustments">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {ADJUSTMENTS_CONFIG.map((adj) => {
+              const Icon = adj.icon;
+              const value = adjustments[adj.key as keyof typeof adjustments];
+              return (
+                <div
+                  key={adj.key}
+                  className="p-3 border rounded-lg bg-muted/10 border-border/30"
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <Icon className="w-3.5 h-3.5 text-primary/70" />
+                    <Label className="text-xs font-medium">{adj.label}</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Slider
+                      value={[value]}
+                      onValueChange={(v) =>
+                        setAdjustments((prev) => ({ ...prev, [adj.key]: v[0] }))
+                      }
+                      onValueCommit={handleImageAdjustments}
+                      min={adj.min}
+                      max={adj.max}
+                      step={adj.step}
+                      className="flex-1"
+                    />
+                    <Input
+                      type="text"
+                      value={value}
+                      onKeyUp={(e) => {
+                        if (e.key === "Enter") {
+                          e.currentTarget.blur();
+                          handleImageAdjustments();
+                        }
+                      }}
+                      onChange={(e) =>
+                        setAdjustments((prev) => ({
+                          ...prev,
+                          [adj.key]: clampValue(e.target.value, adj.min, adj.max, adj.default),
+                        }))
+                      }
+                      className="w-[6ch] text-xs text-center"
+                    />
+                  </div>
+                </div>
+              );
+            })}
           </div>
+        </SectionCard>
+
+        {/* Blend / Blur / Effects */}
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+          <SectionCard title="Blend Mode">
+            <Select
+              value={imgConfig.blendMode || ""}
+              onValueChange={(value) => {
+                setImgConfig({ ...imgConfig, blendMode: value });
+                handleImageAdjustments();
+              }}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select blend" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Blend Modes</SelectLabel>
+                  {BLEND_MODES.map((mode) => (
+                    <SelectItem key={mode} value={mode}>
+                      {mode.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </SectionCard>
+
+          <SectionCard title="Blur Mode">
+            <Select
+              value={imgConfig.blurMode || ""}
+              onValueChange={(value) => setImgConfig({ ...imgConfig, blurMode: value })}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select blur" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Blur Modes</SelectLabel>
+                  {BLUR_MODES.map((mode) => (
+                    <SelectItem key={mode} value={mode}>
+                      {mode.replace(/\b\w/g, (c) => c.toUpperCase())}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </SectionCard>
+
+          <SectionCard title="Effects">
+            <Select
+              value={imgConfig.effect || ""}
+              onValueChange={(value) => setImgConfig({ ...imgConfig, effect: value })}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select effect" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Effects</SelectLabel>
+                  {EFFECTS.map((effect) => (
+                    <SelectItem key={effect} value={effect}>
+                      {effect.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </SectionCard>
         </div>
 
-        <div className="text-center">
-          <h2 className="mb-2 text-2xl font-semibold text-center">
-            Adjust Image
-          </h2>
-          <div className="grid items-center grid-cols-2 gap-4">
-            <div className="px-1 mb-2 border rounded-lg shadow-md shadow-gray-500">
-              <h2 className="">Brightness</h2>
-              <div className="flex items-center w-full max-w-sm gap-2">
-                <Slider
-                  value={[adjustments.brightness]}
-                  onValueChange={(value) =>
-                    setAdjustments({ ...adjustments, brightness: value[0] })
-                  }
-                  onValueCommit={handleImageAdjustments}
-                  min={-1}
-                  max={1}
-                  step={0.01}
-                />
-                <Input
-                  type="text"
-                  value={adjustments.brightness}
-                  onKeyUp={(e) => {
-                    if (e.key === "Enter") {
-                      console.log("enter value ", adjustments.brightness);
-                      e.currentTarget.blur();
-                      handleImageAdjustments();
-                    }
-                  }}
-                  onChange={(e) =>
-                    setAdjustments({
-                      ...adjustments,
-                      brightness: e.target.value
-                        ? parseFloat(e.target.value) > 1
-                          ? 1
-                          : parseFloat(e.target.value)
-                        : 0,
-                    })
-                  }
-                  className="w-[8ch] mb-1"
-                />
-              </div>
-            </div>
-
-            <div className="px-1 mb-2 border rounded-lg shadow-md shadow-gray-500">
-              <h2 className="">Contrast</h2>
-              <div className="flex items-center w-full max-w-sm gap-2">
-                <Slider
-                  value={[adjustments.contrast]}
-                  onValueChange={(value) =>
-                    setAdjustments({ ...adjustments, contrast: value[0] })
-                  }
-                  onValueCommit={handleImageAdjustments}
-                  min={-1}
-                  max={1}
-                  step={0.1}
-                />
-                <Input
-                  type="text"
-                  max={1}
-                  min={-1}
-                  value={adjustments.contrast}
-                  onKeyUp={(e) => {
-                    if (e.key === "Enter") {
-                      e.currentTarget.blur();
-                      handleImageAdjustments();
-                    }
-                  }}
-                  onChange={(e) =>
-                    setAdjustments({
-                      ...adjustments,
-                      contrast: e.target.value
-                        ? parseFloat(e.target.value) > 1
-                          ? 1
-                          : parseFloat(e.target.value)
-                        : 0,
-                    })
-                  }
-                  className="w-[7ch] mb-1"
-                />
-              </div>
-            </div>
-
-            <div className="px-1 mb-2 border rounded-lg shadow-md shadow-gray-500">
-              <h2 className="">Gamma</h2>
-              <div className="flex items-center w-full max-w-sm gap-2">
-                <Slider
-                  value={[adjustments.gamma]}
-                  onValueChange={(value) =>
-                    setAdjustments({ ...adjustments, gamma: value[0] })
-                  }
-                  onValueCommit={handleImageAdjustments}
-                  min={0.1}
-                  max={5.0}
-                  step={0.1}
-                />
-                <Input
-                  type="text"
-                  max={5}
-                  min={0.1}
-                  value={adjustments.gamma}
-                  onKeyUp={(e) => {
-                    if (e.key === "Enter") {
-                      e.currentTarget.blur();
-                      handleImageAdjustments();
-                    }
-                  }}
-                  onChange={(e) =>
-                    setAdjustments({
-                      ...adjustments,
-                      gamma: e.target.value
-                        ? parseFloat(e.target.value) > 5
-                          ? parseFloat(e.target.value) === 0
-                            ? 0.1
-                            : 5
-                          : parseFloat(e.target.value)
-                        : 0.1,
-                    })
-                  }
-                  className="w-[7ch] mb-1"
-                />
-              </div>
-            </div>
-            <div className="px-1 mb-2 border rounded-lg shadow-md shadow-gray-500">
-              <h2 className="">Saturation</h2>
-              <div className="flex items-center w-full max-w-sm gap-2">
-                <Slider
-                  value={[adjustments.saturation]}
-                  onValueChange={(value) =>
-                    setAdjustments({ ...adjustments, saturation: value[0] })
-                  }
-                  onValueCommit={handleImageAdjustments}
-                  min={-100}
-                  max={100}
-                  step={1}
-                />
-                <Input
-                  type="text"
-                  max={1}
-                  min={-1}
-                  value={adjustments.saturation}
-                  onKeyUp={(e) => {
-                    if (e.key === "Enter") {
-                      e.currentTarget.blur();
-                      handleImageAdjustments();
-                    }
-                  }}
-                  onChange={(e) =>
-                    setAdjustments({
-                      ...adjustments,
-                      saturation: e.target.value
-                        ? parseFloat(e.target.value) > 100
-                          ? 100
-                          : parseFloat(e.target.value)
-                        : 0,
-                    })
-                  }
-                  className="w-[7ch] mb-1"
-                />
-              </div>
-            </div>
-
-            <div className="px-1 mb-2 border rounded-lg shadow-md shadow-gray-500">
-              <h2 className="">Hue</h2>
-              <div className="flex items-center w-full max-w-sm gap-2">
-                <Slider
-                  value={[adjustments.hue]}
-                  onValueChange={(value) =>
-                    setAdjustments({ ...adjustments, hue: value[0] })
-                  }
-                  onValueCommit={handleImageAdjustments}
-                  min={-360}
-                  max={360}
-                  step={1}
-                />
-                <Input
-                  type="text"
-                  max={1}
-                  min={-1}
-                  value={adjustments.hue}
-                  onKeyUp={(e) => {
-                    if (e.key === "Enter") {
-                      e.currentTarget.blur();
-                      handleImageAdjustments();
-                    }
-                  }}
-                  onChange={(e) =>
-                    setAdjustments({
-                      ...adjustments,
-                      hue: e.target.value
-                        ? parseFloat(e.target.value) > 360
-                          ? 360
-                          : parseFloat(e.target.value)
-                        : 0,
-                    })
-                  }
-                  className="w-[7ch] mb-1"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <h2 className="mb-2 text-2xl font-semibold text-center">
-            Blend Image
-          </h2>
-
-          <Label className="block mb-2 text-sm font-medium text-foreground">
-            Blend Mode
-          </Label>
-          <Select
-            value={imgConfig.blendMode || ""}
-            onValueChange={(value) => {
-              setImgConfig({ ...imgConfig, blendMode: value });
-              handleImageAdjustments();
-            }}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select Blend Mode" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Blend Mode</SelectLabel>
-                <SelectItem value="add">Blend Mode: ADD</SelectItem>
-                <SelectItem value="color-burn">
-                  Blend Mode: Color Burn
-                </SelectItem>
-                <SelectItem value="color-dodge">
-                  Blend Mode: Color Dodge
-                </SelectItem>
-                <SelectItem value="darken">Blend Mode: Darken</SelectItem>
-                <SelectItem value="lighten">Blend Mode: Lighten</SelectItem>
-                <SelectItem value="difference">
-                  Blend Mode: Difference
-                </SelectItem>
-                <SelectItem value="exclusion">Blend Mode: Exclusion</SelectItem>
-                <SelectItem value="linear-burn">
-                  Blend Mode: Linear Burn
-                </SelectItem>
-                <SelectItem value="linear-light">
-                  Blend Mode: Linear Light
-                </SelectItem>
-                <SelectItem value="Multiply">Blend Mode: Multiply</SelectItem>
-                <SelectItem value="normal">Blend Mode: Normal</SelectItem>
-                <SelectItem value="opacity">Blend Mode: Opacity</SelectItem>
-                <SelectItem value="overlay">Blend Mode: Overlay</SelectItem>
-                <SelectItem value="screen">Blend Mode: Screen</SelectItem>
-                <SelectItem value="soft-light">
-                  Blend Mode: Soft Light
-                </SelectItem>
-                <SelectItem value="substract">Blend Mode: Substract</SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <h2 className="mb-2 text-2xl font-semibold text-center">
-            Blur Image
-          </h2>
-
-          <Label className="block mb-2 text-sm font-medium text-foreground">
-            Blur Mode
-          </Label>
-          <Select
-            value={imgConfig.blurMode || ""}
-            onValueChange={(value) =>
-              setImgConfig({ ...imgConfig, blurMode: value })
-            }
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select Blend Mode" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Blur Mode</SelectLabel>
-                <SelectItem value="gaussian">Blur Mode: gaussian</SelectItem>
-                <SelectItem value="box">Blur Mode: box</SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <h2 className="mb-2 text-2xl font-semibold text-center">Effects</h2>
-
-          <Label className="block mb-2 text-sm font-medium text-foreground">
-            Image Effect
-          </Label>
-          <Select
-            value={imgConfig.effect || ""}
-            onValueChange={(value) =>
-              setImgConfig({ ...imgConfig, effect: value })
-            }
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select Blend Mode" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Effect</SelectLabel>
-                <SelectItem value="dilate">Dilate</SelectItem>
-                <SelectItem value="edge-detection">Edge Detection</SelectItem>
-                <SelectItem value="emboss">Emboss</SelectItem>
-                <SelectItem value="erode">Erode</SelectItem>
-                <SelectItem value="invert">Invert</SelectItem>
-                <SelectItem value="median">Median</SelectItem>
-                <SelectItem value="sepia">Sepia</SelectItem>
-                <SelectItem value="sharpen">Sharpen</SelectItem>
-                <SelectItem value="sobel">Sobel</SelectItem>
-                <SelectItem value="unsharp-mark">Unsharp Mark</SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="flex w-full">
+        {/* Apply Button */}
+        <div className="flex justify-center">
           <Button
             onClick={handleImageAdjustments}
-            className="m-auto text-center"
+            disabled={!imgConfig.file || isProcessing}
+            className="px-8 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            size="lg"
           >
-            Submit
+            {isProcessing ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4 mr-2" />
+                Apply Adjustments
+              </>
+            )}
           </Button>
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 }

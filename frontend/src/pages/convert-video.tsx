@@ -1,17 +1,31 @@
 import { Button } from "@/components/ui/button";
-
-import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { PageShell, SectionCard } from "@/components/ui/page-shell";
 import { useEffect, useState } from "react";
 import {
   ConvertVideoV2,
-  HandleSelectFile,
+  HandleSelectVideoFile,
 } from "../../wailsjs/go/handlers/App";
-import { Trash2Icon } from "lucide-react";
+import {
+  ArrowRightLeft,
+  Trash2Icon,
+  FileVideo,
+  Loader2,
+  CheckCircle2,
+  XCircle,
+  Upload,
+} from "lucide-react";
 import { EventsOff, EventsOn } from "../../wailsjs/runtime/runtime";
 import { CircularProgress } from "@/components/ui/progress";
-
 import { toast } from "sonner";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function ConvertVideoPage() {
   const [fileConfig, setFileConfig] = useState({
@@ -36,7 +50,7 @@ export default function ConvertVideoPage() {
       eta_seconds: number;
       status: string;
     }) => {
-      if (jobId && p.id !== jobId) return; // ignore other jobs
+      if (jobId && p.id !== jobId) return;
       setProgress([p.percentage.toFixed(2) as unknown as number]);
       setEta(p.eta_seconds);
       setStatus(p.status as any);
@@ -55,19 +69,8 @@ export default function ConvertVideoPage() {
       setProgress(p.status === "done" ? [100] : progress);
       if (p.status === "done") {
         toast.success("Conversion successful!", {
-          description: `output path: ` + p.output,
+          description: `Output: ${p.output}`,
           duration: 8000,
-          action: {
-            label: "Open Folder",
-            onClick: () => {
-              if (p.output) {
-                // const folderPath = p.output.substring(
-                //   0,
-                //   p.output.lastIndexOf("/")
-                // );
-              }
-            },
-          },
         });
       } else {
         toast.error("Conversion failed: " + p.error);
@@ -88,13 +91,8 @@ export default function ConvertVideoPage() {
   const [videoPath, setVideoPath] = useState("");
 
   const handleSelectFile = async () => {
-    const r = await HandleSelectFile();
-
-    if (!r) {
-      console.error("No file selected.");
-      return;
-    }
-
+    const r = await HandleSelectVideoFile();
+    if (!r) return;
     setVideoPath(r);
   };
 
@@ -103,142 +101,174 @@ export default function ConvertVideoPage() {
       setStatus("running");
       setProgress([0]);
       setEta(null);
-
       const id = await ConvertVideoV2(videoPath, fileConfig.format);
-
       if (!id) {
         setStatus("error");
-        alert("Conversion failed to start.");
+        toast.error("Conversion failed to start.");
         return;
       }
       setJobId(id);
     } catch (error) {
       setStatus("error");
-      alert("Error converting video: " + error);
+      toast.error("Error: " + error);
     }
   };
 
-  const checkConversion =
-    !fileConfig.format || !videoPath || status === "running";
+  const handleDismiss = () => {
+    setStatus("idle");
+    setProgress([0]);
+    setEta(null);
+    setDurationms(0);
+    setConvertedms(0);
+  };
+
+  const canConvert = fileConfig.format && videoPath && status !== "running";
+
+  const formatMs = (ms: number) => {
+    if (!ms) return "0s";
+    const s = Math.floor(ms / 1000);
+    const m = Math.floor(s / 60);
+    return m > 0 ? `${m}m ${s % 60}s` : `${s}s`;
+  };
+
   return (
-    <div className="flex-1 w-full p-8">
-      <h1 className="mb-4 text-3xl font-bold text-center">
-        Convert Video Format
-      </h1>
-      <Button>
-        <a href="/compress-video">Supported Formats</a>
-      </Button>
-      <div className="grid grid-cols-1 gap-4">
-        <div className="flex col-span-1 text-center">
-          <Button
-            variant={"outline"}
-            onClick={handleSelectFile}
-            className="m-auto mt-4 text-foreground"
+    <PageShell
+      title="Convert Video"
+      subtitle="Convert between MP4, AVI, MOV, and MKV formats"
+      icon={ArrowRightLeft}
+    >
+      <div className="space-y-5">
+        {/* Step 1: File Selection */}
+        <SectionCard>
+          <div className="flex items-center gap-2 mb-3">
+            <span className="flex items-center justify-center w-6 h-6 text-xs font-bold rounded-full bg-primary/20 text-primary">1</span>
+            <h3 className="text-sm font-semibold">Select Video File</h3>
+          </div>
+
+          {videoPath ? (
+            <div className="flex items-center gap-3 p-3 border rounded-lg bg-muted/30 border-border/50">
+              <FileVideo className="flex-shrink-0 w-5 h-5 text-primary" />
+              <span className="flex-1 text-sm truncate text-foreground/80">{videoPath}</span>
+              <button
+                onClick={() => setVideoPath("")}
+                className="p-1 transition-colors rounded hover:bg-destructive/20"
+              >
+                <Trash2Icon className="w-4 h-4 text-destructive" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={handleSelectFile}
+              disabled={status === "running"}
+              className="flex flex-col items-center justify-center w-full gap-2 p-8 text-sm transition-all duration-200 border-2 border-dashed rounded-xl border-border/50 text-muted-foreground hover:border-primary/50 hover:bg-primary/5 hover:text-foreground disabled:opacity-50"
+            >
+              <Upload className="w-8 h-8 opacity-40" />
+              <span>Click to select a video file</span>
+            </button>
+          )}
+        </SectionCard>
+
+        {/* Step 2: Format Selection */}
+        <SectionCard>
+          <div className="flex items-center gap-2 mb-3">
+            <span className="flex items-center justify-center w-6 h-6 text-xs font-bold rounded-full bg-primary/20 text-primary">2</span>
+            <h3 className="text-sm font-semibold">Choose Target Format</h3>
+          </div>
+
+          <Select
+            value={fileConfig.format}
+            onValueChange={(v) =>
+              setFileConfig((prev) => ({ ...prev, format: v }))
+            }
             disabled={status === "running"}
           >
-            get video path
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select output format" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectLabel>Video Formats</SelectLabel>
+                <SelectItem value="mp4">MP4 — Universal compatibility</SelectItem>
+                <SelectItem value="avi">AVI — Legacy format</SelectItem>
+                <SelectItem value="mov">MOV — Apple ecosystem</SelectItem>
+                <SelectItem value="mkv">MKV — Flexible container</SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </SectionCard>
+
+        {/* Convert Button */}
+        <div className="flex justify-center">
+          <Button
+            disabled={!canConvert}
+            onClick={handleConvertFile}
+            className="px-8 py-2.5 text-sm font-semibold transition-all hover:scale-[1.02] active:scale-[0.98]"
+            size="lg"
+          >
+            {status === "running" ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Converting...
+              </>
+            ) : (
+              <>
+                <ArrowRightLeft className="w-4 h-4 mr-2" />
+                Convert Video
+              </>
+            )}
           </Button>
         </div>
 
-        <div className="col-span-1">
-          {videoPath ? (
-            <Label className="flex mb-2 text-sm font-medium text-gray-700 text-foreground">
-              File Path: {videoPath}
-              <Trash2Icon
-                onClick={() => {
-                  setVideoPath("");
-                }}
-                className="w-4 h-4 mx-4 text-red-500 cursor-pointer"
-              />
-            </Label>
-          ) : (
-            <Label className="flex mb-2 text-sm font-medium text-gray-700 text-foreground">
-              No file selected. Please select a video file.
-            </Label>
-          )}
-
-          <Label className="block mb-2 text-sm font-medium text-gray-700 text-foreground">
-            Convert To
-          </Label>
-          <select
-            value={fileConfig.format}
-            onChange={(e) =>
-              setFileConfig((prev) => ({ ...prev, format: e.target.value }))
-            }
-            disabled={status === "running"}
-            className="w-full p-2 border border-gray-900 rounded-md text-background"
-          >
-            <option value="" disabled>
-              Select format
-            </option>
-            <option value="mp4">MP4</option>
-            <option value="avi">AVI</option>
-            <option value="mov">MOV</option>
-            <option value="mkv">MKV</option>
-          </select>
-
-          <div className="flex w-full my-8">
-            <Button
-              disabled={checkConversion}
-              className="m-auto"
-              onClick={handleConvertFile}
-            >
-              <span className="mr-2">Convert</span>
-            </Button>
-          </div>
-        </div>
-
-        <Card
-          className={`max-w-lg gap-0 min-w-[400px] mx-auto bg-transparent shadow-none border-primary ${
-            status === "idle" ? "hidden" : "block"
-          }`}
-        >
-          <CardHeader>
-            <CardTitle className="flex justify-between">
-              {status === "running"
-                ? "Converting Video..."
-                : status === "done"
-                  ? "Video converted"
-                  : "Error!"}
-
-              <Button
-                variant="destructive"
-                onClick={() => {
-                  setStatus("idle");
-                  setProgress([0]);
-                  setEta(null);
-                  setDurationms(0);
-                  setConvertedms(0);
-                }}
-              >
+        {/* Progress Card */}
+        {status !== "idle" && (
+          <SectionCard className="animate-scale-in">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-2">
+                {status === "running" && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
+                {status === "done" && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+                {status === "error" && <XCircle className="w-4 h-4 text-destructive" />}
+                <h3 className="text-sm font-semibold">
+                  {status === "running" ? "Converting..." : status === "done" ? "Conversion Complete" : "Error"}
+                </h3>
+              </div>
+              <Button variant="ghost" size="sm" onClick={handleDismiss} className="h-7 text-xs">
                 Dismiss
               </Button>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center w-full mx-auto">
+            </div>
+
+            <div className="flex items-center gap-6">
               <CircularProgress
                 value={progress[0]}
-                size={120}
-                strokeWidth={10}
+                size={100}
+                strokeWidth={8}
                 showLabel
-                labelClassName="text-xl font-bold"
-                renderLabel={(progress) => `${progress}%`}
-                className="stroke-indigo-500/25"
-                progressClassName={`${status === "error" && "stroke-red-500"} ${
-                  status === "done" && "stroke-green-500"
-                } ${status === "running" && "stroke-indigo-600"}`}
+                labelClassName="text-lg font-bold"
+                renderLabel={(p) => `${p}%`}
+                className="stroke-muted"
+                progressClassName={`${status === "error" ? "stroke-destructive" : ""} ${
+                  status === "done" ? "stroke-emerald-400" : ""
+                } ${status === "running" ? "stroke-primary" : ""}`}
               />
-              <div className="flex-1">
-                <div>Converting Status: {status}</div>
-                <div>Total duration: {durationms} ms</div>
-                <div>converted duration: {convertedms} ms</div>
-                <div>ETA: {eta} Seconds</div>
+              <div className="flex-1 space-y-1.5 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Duration</span>
+                  <span className="font-medium">{formatMs(durationms)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Converted</span>
+                  <span className="font-medium">{formatMs(convertedms)}</span>
+                </div>
+                {eta !== null && eta > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">ETA</span>
+                    <span className="font-medium">{eta}s</span>
+                  </div>
+                )}
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </SectionCard>
+        )}
       </div>
-    </div>
+    </PageShell>
   );
 }
