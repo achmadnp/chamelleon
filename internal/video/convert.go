@@ -33,6 +33,21 @@ func NewConvertService(ffmpegManager *ffmpeg.Manager) *ConvertService {
 	}
 }
 
+// Compatibility definitions
+var compatibleVideo = map[string]map[string]bool{
+	"mp4":  {"h264": true, "hevc": true, "av1": true, "mpeg4": true},
+	"webm": {"vp8": true, "vp9": true, "av1": true},
+	"mkv":  {"h264": true, "hevc": true, "vp8": true, "vp9": true, "av1": true, "mpeg4": true},
+	"mov":  {"h264": true, "hevc": true, "prores": true},
+}
+
+var compatibleAudio = map[string]map[string]bool{
+	"mp4":  {"aac": true, "ac3": true, "mp3": true},
+	"webm": {"opus": true, "vorbis": true},
+	"mkv":  {"aac": true, "ac3": true, "mp3": true, "opus": true, "vorbis": true, "flac": true},
+	"mov":  {"aac": true, "alac": true, "pcm_s16le": true},
+}
+
 // Convert converts a video to a different format
 func (s *ConvertService) Convert(
 	ctx context.Context,
@@ -54,14 +69,72 @@ func (s *ConvertService) Convert(
 	j.MarkRunning()
 	s.emitProgress(j, onProgress, true)
 
-	args := []string{
-		"-y", "-i", j.Progress.Input,
-		"-map", "0:v?", "-map", "0:a?",
-		"-c", "copy",
-		"-progress", "pipe:1",
-		"-nostats",
-		j.Progress.Output,
+	// 1. Probe source codecs
+	vCodec, aCodec, probeErr := ffmpeg.ProbeCodecs(ffmpegPath, j.Progress.Input)
+	if probeErr != nil {
+		fmt.Printf("Warning: failed to probe codecs: %v\n", probeErr)
 	}
+	targetExt := strings.TrimPrefix(filepath.Ext(j.Progress.Output), ".")
+
+	// 2. Decide Fast Path vs Slow Path
+	canCopyVideo := false
+	if vMap, ok := compatibleVideo[targetExt]; ok && vMap[vCodec] {
+		canCopyVideo = true
+	}
+	canCopyAudio := false
+	if aMap, ok := compatibleAudio[targetExt]; ok && aMap[aCodec] {
+		canCopyAudio = true
+	}
+
+	args := []string{"-y"}
+
+	if canCopyVideo && canCopyAudio {
+		// FAST PATH: Stream Copy
+		fmt.Printf("Compatible codecs found (v:%s, a:%s) -> using -c copy\n", vCodec, aCodec)
+		args = append(args, "-i", j.Progress.Input, "-c", "copy")
+	} else {
+		// SLOW PATH: Re-encode
+		fmt.Printf("Incompatible codecs (v:%s, a:%s) for target %s -> setting up re-encoder\n", vCodec, aCodec, targetExt)
+		
+		// Determine best video encoder
+		accels, _ := ffmpeg.GetAvailableHWAccels(ffmpegPath)
+		accelStr := strings.Join(accels, " ")
+		
+		vEncoder := "libx264" // fallback
+		if targetExt == "webm" {
+			vEncoder = "libvpx-vp9"
+		} else {
+			if strings.Contains(accelStr, "nvenc") {
+				vEncoder = "h264_nvenc"
+				args = append(args, "-hwaccel", "cuda")
+			} else if strings.Contains(accelStr, "videotoolbox") {
+				vEncoder = "h264_videotoolbox"
+				args = append(args, "-hwaccel", "videotoolbox")
+			} else if strings.Contains(accelStr, "qsv") {
+				vEncoder = "h264_qsv"
+				args = append(args, "-hwaccel", "qsv")
+			} else if strings.Contains(accelStr, "amf") {
+				vEncoder = "h264_amf"
+			}
+		}
+
+		args = append(args, "-i", j.Progress.Input)
+		
+		if targetExt == "webm" {
+			args = append(args, "-c:v", "libvpx-vp9", "-row-mt", "1", "-b:v", "0", "-crf", "30")
+			args = append(args, "-c:a", "libopus", "-b:a", "128k")
+		} else {
+			args = append(args, "-c:v", vEncoder)
+			if vEncoder == "libx264" {
+				args = append(args, "-preset", "veryfast", "-crf", "23", "-threads", "0")
+			} else if vEncoder == "h264_nvenc" {
+				args = append(args, "-preset", "p4", "-cq", "25", "-spatial-aq", "1")
+			}
+			args = append(args, "-c:a", "aac", "-b:a", "192k")
+		}
+	}
+
+	args = append(args, "-progress", "pipe:1", "-nostats", j.Progress.Output)
 
 	cmd := exec.CommandContext(ctx, ffmpegPath, args...)
 
@@ -88,8 +161,6 @@ func (s *ConvertService) Convert(
 
 	emitNow := func(force bool) {
 		j.UpdateProgress(outMS, speed)
-		fmt.Printf("Progress: %.2f%%, OutTimeMS: %d, Speed: %s, ETASeconds: %d\n",
-			j.Progress.Percentage, j.Progress.OutTimeMS, j.Progress.Speed, j.Progress.ETASeconds)
 		s.emitProgress(j, onProgress, force)
 	}
 

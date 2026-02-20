@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"runtime"
 	"strconv"
+	"strings"
 )
 
 var reDuration = regexp.MustCompile(`Duration:\s+(\d+):(\d+):(\d+\.\d+)`)
@@ -71,6 +72,50 @@ func ProbeDuration(ffmpegPath, inputPath string) (int64, error) {
 	mmin, _ := strconv.ParseFloat(m[2], 64)
 	s, _ := strconv.ParseFloat(m[3], 64)
 	return int64((h*3600 + mmin*60 + s) * 1000), nil
+}
+
+var reVideoCodec = regexp.MustCompile(`Stream #\d:\d(?:\[.*?\])?.*?: Video: ([a-zA-Z0-9_-]+)`)
+var reAudioCodec = regexp.MustCompile(`Stream #\d:\d(?:\[.*?\])?.*?: Audio: ([a-zA-Z0-9_-]+)`)
+
+// ProbeCodecs extracts the video and audio codecs of a media file.
+func ProbeCodecs(ffmpegPath, inputPath string) (videoCodec, audioCodec string, err error) {
+	cmd := exec.Command(ffmpegPath, "-i", inputPath)
+	out, _ := cmd.CombinedOutput()
+	outStr := string(out)
+
+	vMatch := reVideoCodec.FindStringSubmatch(outStr)
+	if len(vMatch) > 1 {
+		videoCodec = vMatch[1]
+	}
+
+	aMatch := reAudioCodec.FindStringSubmatch(outStr)
+	if len(aMatch) > 1 {
+		audioCodec = aMatch[1]
+	}
+
+	return videoCodec, audioCodec, nil
+}
+
+// GetAvailableHWAccels runs ffmpeg -hwaccels and returns a list of supported accels.
+func GetAvailableHWAccels(ffmpegPath string) ([]string, error) {
+	cmd := exec.Command(ffmpegPath, "-hwaccels")
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, fmt.Errorf("failed to list hwaccels: %w", err)
+	}
+
+	lines := strings.Split(string(out), "\n")
+	var accels []string
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "Hardware acceleration methods:") || strings.HasPrefix(line, "ffmpeg version") {
+			continue
+		}
+		if !strings.Contains(line, " ") { // Ensure it's just the hwaccel name
+			accels = append(accels, line)
+		}
+	}
+	return accels, nil
 }
 
 // Cleanup removes the extracted FFmpeg binary
