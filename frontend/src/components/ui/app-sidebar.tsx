@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Button } from "./button";
 import { Separator } from "./separator";
 import {
@@ -24,40 +25,40 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Video</SidebarGroupLabel>
-          <a href="/" className="w-full">
+          <Link to="/" className="w-full">
             <Button variant="ghost" className="justify-start w-full">
               <UserCog className="w-4 h-4 mr-2" />
               <span className="text-base">Convert</span>
             </Button>
-          </a>
-          <a href="/compress-video" className="w-full">
+          </Link>
+          <Link to="/compress-video" className="w-full">
             <Button variant="ghost" className="justify-start w-full">
               <UserCog className="w-4 h-4 mr-2" />
               <span className="text-base">Compress</span>
             </Button>
-          </a>
+          </Link>
         </SidebarGroup>
 
         <SidebarGroup className="space-y-2">
           <SidebarGroupLabel>Image</SidebarGroupLabel>
-          <a href="/convert-image" className="w-full">
+          <Link to="/convert-image" className="w-full">
             <Button variant="ghost" className="justify-start w-full">
               <UserCog className="w-4 h-4 mr-2" />
               <span className="text-base">Convert</span>
             </Button>
-          </a>
-          <a href="/image-processing" className="w-full">
+          </Link>
+          <Link to="/image-processing" className="w-full">
             <Button variant="ghost" className="justify-start w-full">
               <UserCog className="w-4 h-4 mr-2" />
               <span className="text-sm text-left">Image Processing</span>
             </Button>
-          </a>
-          <a href="/compress-image" className="w-full">
+          </Link>
+          <Link to="/compress-image" className="w-full">
             <Button variant="ghost" className="justify-start w-full">
               <UserCog className="w-4 h-4 mr-2" />
               <span className="text-base">Compress</span>
             </Button>
-          </a>
+          </Link>
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter className="text-xs gap-y-0">
