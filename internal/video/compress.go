@@ -194,6 +194,32 @@ func BuildCompressCommand(inputPath, outputPath, logic string) ([]string, error)
 			outputPath,
 		}
 
+	case "discord":
+		args = []string{
+			"-y", "-i", inputPath,
+			"-c:v", "libx264",
+			"-preset", "faster",
+			"-crf", "32",
+			"-vf", "scale=-2:720", // Downscale to 720p max
+			"-c:a", "aac",
+			"-b:a", "128k",
+			"-progress", "pipe:1",
+			outputPath,
+		}
+
+	case "webOptimized":
+		args = []string{
+			"-y", "-i", inputPath,
+			"-c:v", "libx264",
+			"-preset", "fast",
+			"-crf", "23",
+			"-c:a", "aac",
+			"-b:a", "128k",
+			"-movflags", "+faststart", // Crucial for web streaming
+			"-progress", "pipe:1",
+			outputPath,
+		}
+
 	default:
 		return nil, fmt.Errorf("unknown compression logic: %s", logic)
 	}

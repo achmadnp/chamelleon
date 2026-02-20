@@ -206,7 +206,12 @@ export default function CompressVideoPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
-                <SelectLabel>Compression Options</SelectLabel>
+                <SelectLabel>Smart Presets</SelectLabel>
+                <SelectItem value="discord">Discord (Aggressive for Sharing)</SelectItem>
+                <SelectItem value="webOptimized">Web-Optimized MP4 (Fast Streaming)</SelectItem>
+              </SelectGroup>
+              <SelectGroup>
+                <SelectLabel>Custom Strategies</SelectLabel>
                 <SelectItem value="bestBalance">Best Balance — Quality vs. Size</SelectItem>
                 <SelectItem value="lowerBitrate">Lower Bitrate — Smaller file, lower quality</SelectItem>
                 <SelectItem value="changeCodec">Change Codec — Better compression efficiency</SelectItem>
