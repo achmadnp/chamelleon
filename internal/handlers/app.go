@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"chamelleon/internal/ffmpeg"
 	imgservice "chamelleon/internal/image"
@@ -136,6 +137,11 @@ func (a *App) HandleSelectImageFile() (string, error) {
 
 // ConvertVideoV2 starts a video conversion job
 func (a *App) ConvertVideoV2(path string, convertTo string) (string, error) {
+	ext := strings.TrimPrefix(filepath.Ext(path), ".")
+	if strings.ToLower(ext) == strings.ToLower(convertTo) {
+		return "", fmt.Errorf("cannot convert video to the same format")
+	}
+
 	id := uuid.NewString()
 	outputPath := video.PrepareConvertOutput(path, convertTo)
 
@@ -258,6 +264,36 @@ func (a *App) EffectImage(filename, imageData, effectMode string) (string, error
 // SaveProcessedImage saves a processed image to a file
 func (a *App) SaveProcessedImage(filename, imageData string) (string, error) {
 	return a.formatService.Save(filename, imageData)
+}
+
+// SaveAsImage opens a save file dialog and saves the base64 image data to the chosen path
+func (a *App) SaveAsImage(defaultName, base64Data string) (string, error) {
+	ext := filepath.Ext(defaultName)
+	if ext == "" {
+		ext = ".png" // Fallback
+	}
+
+	filterPattern := "*" + ext
+
+	filepath, err := runtime.SaveFileDialog(a.ctx, runtime.SaveDialogOptions{
+		Title:           "Save Image As",
+		DefaultFilename: defaultName,
+		Filters: []runtime.FileFilter{
+			{DisplayName: "Image File (" + filterPattern + ")", Pattern: filterPattern},
+			{DisplayName: "All Files (*.*)", Pattern: "*.*"},
+		},
+	})
+
+	if err != nil {
+		return "", fmt.Errorf("failed to open save dialog: %v", err)
+	}
+
+	if filepath == "" {
+		return "", nil // User cancelled
+	}
+
+	// Just use the existing formatService logic to decode and write the file
+	return a.formatService.Save(filepath, base64Data)
 }
 
 // ConvertImage converts an image to a different format and returns base64 data URL

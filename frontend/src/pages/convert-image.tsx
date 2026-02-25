@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { PageShell, SectionCard } from "@/components/ui/page-shell";
 import { useState } from "react";
-import { ConvertImage } from "../../wailsjs/go/handlers/App";
+import { ConvertImage, SaveAsImage } from "../../wailsjs/go/handlers/App";
 import {
   ArrowRightLeft,
   Download,
@@ -113,17 +113,21 @@ export default function ConvertImagePage() {
     }
   };
 
-  const handleDownload = () => {
+  const handleSaveAs = async () => {
     if (!convertedImg || !file) return;
-    const baseName = file.name.replace(/\.[^/.]+$/, "");
-    const ext = targetFormat === "jpeg" ? "jpg" : targetFormat;
-    const link = document.createElement("a");
-    link.href = convertedImg;
-    link.download = `${baseName}_converted.${ext}`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    toast.success(`Downloaded ${baseName}_converted.${ext}`);
+    
+    try {
+      const baseName = file.name.replace(/\.[^/.]+$/, "");
+      const ext = targetFormat === "jpeg" ? "jpg" : targetFormat;
+      const defaultName = `${baseName}_converted.${ext}`;
+      
+      const savedPath = await SaveAsImage(defaultName, convertedImg);
+      if (savedPath) {
+        toast.success(`Saved to ${savedPath}`);
+      }
+    } catch (err) {
+      toast.error("Failed to save image: " + String(err));
+    }
   };
 
   const canConvert = file && targetFormat && !isConverting;
@@ -187,9 +191,9 @@ export default function ConvertImagePage() {
                 <div className="overflow-hidden border rounded-lg border-border/40">
                   <img src={convertedImg} alt="Converted" className="w-full h-auto" />
                 </div>
-                <Button onClick={handleDownload} className="w-full" variant="default">
+                <Button onClick={handleSaveAs} className="w-full" variant="default">
                   <Download className="w-4 h-4 mr-2" />
-                  Download .{targetFormat === "jpeg" ? "jpg" : targetFormat}
+                  Save As .{targetFormat === "jpeg" ? "jpg" : targetFormat}
                 </Button>
               </div>
             ) : (

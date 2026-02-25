@@ -15,7 +15,7 @@ import {
 import { Slider } from "@/components/ui/slider";
 import { PageShell, SectionCard } from "@/components/ui/page-shell";
 import { useState } from "react";
-import { AdjustImage } from "../../wailsjs/go/handlers/App";
+import { AdjustImage, SaveAsImage } from "../../wailsjs/go/handlers/App";
 import {
   Palette,
   SaveIcon,
@@ -87,15 +87,20 @@ export default function ImageProcessingPage() {
     setAdjustments({ brightness: 0, contrast: 0, gamma: 2.4, saturation: 0, hue: 0 });
   };
 
-  const handleSavedImage = () => {
-    if (!processedImg) return;
-    const link = document.createElement("a");
-    link.href = processedImg;
-    link.download = `transformed_${imgConfig.file?.name}` || "processed_image.png";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    toast.success("Image saved!");
+  const handleSavedImage = async () => {
+    if (!processedImg || !imgConfig.file) return;
+    
+    try {
+      const defaultName = `transformed_${imgConfig.file.name}` || "processed_image.png";
+      // processedImg includes 'data:image/png;base64,' prefix which the backend expects
+      const savedPath = await SaveAsImage(defaultName, processedImg);
+      
+      if (savedPath) {
+        toast.success(`Image saved to ${savedPath}`);
+      }
+    } catch (err) {
+      toast.error("Failed to save image: " + String(err));
+    }
   };
 
   const handleImageAdjustments = async () => {

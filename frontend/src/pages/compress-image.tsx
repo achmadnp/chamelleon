@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { PageShell, SectionCard } from "@/components/ui/page-shell";
 import { useState } from "react";
-import { CompressImage } from "../../wailsjs/go/handlers/App";
+import { CompressImage, SaveAsImage } from "../../wailsjs/go/handlers/App";
 import {
   Download,
   Loader2,
@@ -85,18 +85,21 @@ export default function CompressImagePage() {
     }
   };
 
-  const handleDownload = () => {
+  const handleSaveAs = async () => {
     if (!compressedResult || !file) return;
-    const baseName = file.name.replace(/\.[^/.]+$/, "");
-    const ext = compressedResult.format === "jpeg" ? "jpg" : compressedResult.format;
-    const filename = `${baseName}_compressed.${ext}`;
-    const link = document.createElement("a");
-    link.href = compressedResult.data;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    toast.success(`Saved as ${filename}`);
+    
+    try {
+      const baseName = file.name.replace(/\.[^/.]+$/, "");
+      const ext = compressedResult.format === "jpeg" ? "jpg" : compressedResult.format;
+      const defaultName = `${baseName}_compressed.${ext}`;
+      
+      const savedPath = await SaveAsImage(defaultName, compressedResult.data);
+      if (savedPath) {
+        toast.success(`Saved as ${savedPath}`);
+      }
+    } catch (err) {
+      toast.error("Failed to save image: " + String(err));
+    }
   };
 
   const canCompress = file && !isCompressing;
@@ -165,9 +168,9 @@ export default function CompressImagePage() {
                   </div>
                 </div>
 
-                <Button onClick={handleDownload} className="w-full">
+                <Button onClick={handleSaveAs} className="w-full">
                   <Download className="w-4 h-4 mr-2" />
-                  Download Compressed
+                  Save As Compressed
                 </Button>
               </div>
             ) : (
