@@ -25,6 +25,8 @@ export function ConvertVideoV2(arg1:string,arg2:string):Promise<string>;
 
 export function EffectImage(arg1:string,arg2:string,arg3:string):Promise<string>;
 
+export function ExtractAudio(arg1:string,arg2:string):Promise<string>;
+
 export function GetJob(arg1:string):Promise<job.Progress|boolean>;
 
 export function HandleSelectFile():Promise<string>;
@@ -32,6 +34,8 @@ export function HandleSelectFile():Promise<string>;
 export function HandleSelectImageFile():Promise<string>;
 
 export function HandleSelectVideoFile():Promise<string>;
+
+export function MuteVideo(arg1:string):Promise<string>;
 
 export function ProbeVideoDuration(arg1:string):Promise<number>;
 

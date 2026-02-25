@@ -12,14 +12,18 @@ Instead of relying on slow cloud converters with file size limits and privacy co
 
 ## ✨ Features
 
-Chamelleon acts as a "Swiss Army Knife" for media files, split into two main categories: Video and Image.
+Chamelleon acts as a "Swiss Army Knife" for media files, split into three main categories: Video, Audio, and Image.
 
 ### 🎬 Video Tools
 * **Smart Video Converter:** Convert videos seamlessly to various formats (MP4, WebM, MKV, MOV).
   * *Smart Engine:* Automatically detects compatible codecs to perform lossless, instant stream-copying when possible.
   * *Hardware Acceleration:* Automatically utilizes your GPU (NVENC, QSV, AMF, VideoToolbox) for up to 10x faster encoding when re-encoding is strictly necessary.
-* **Intelligent Video Compressor:** Dramatically reduce video file sizes with tailored presets (Lower Bitrate, Reduce Resolution, Change Codec, Adjust Framerate, Best Balance).
+* **Intelligent Video Compressor:** Dramatically reduce video file sizes with tailored presets. Includes Custom Strategies (Lower Bitrate, Reduce Resolution, etc.) and new **Smart Presets** like "Discord (Under 25MB)" and "Web-Optimized MP4 (Fast Streaming)".
 * **Video Trimmer & GIF Maker:** Easily extract specific, precise segments from a video using a visual time slider. Option to extract lossless clips or generate high-quality optimized GIFs.
+
+### 🎵 Audio Tools
+* **Extract Audio:** Instantly rip the audio track from any video file into a standalone, generic audio file (supports generic Lossy `.mp3` and Lossless `.wav` extraction).
+* **Mute Video:** Need to post a video but strip out the embarrassing background noise? This tool utilizes instant stream copying to remove the audio track flawlessly without re-encoding a single video pixel.
 
 ### 🖼️ Image Tools
 * **Image Converter:** Drag-and-drop conversion between modern media formats (PNG, JPG/JPEG, WebP, GIF, ICO) without uploading files to the cloud.

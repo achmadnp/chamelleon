@@ -16,9 +16,10 @@ import {
   ImageIcon,
   Video,
   Scissors,
+  Music,
 } from "lucide-react";
 
-const APP_VERSION = "v4.153.224";
+const APP_VERSION = "v1.0.1b";
 
 const NAV_ITEMS = [
   {
@@ -29,6 +30,11 @@ const NAV_ITEMS = [
       { label: "Compress", path: "/compress-video", icon: Minimize2 },
       { label: "Trim / GIF", path: "/trim-video", icon: Scissors },
     ],
+  },
+  {
+    group: "Audio",
+    groupIcon: Music,
+    items: [{ label: "Extract / Mute", path: "/audio-tools", icon: Music }],
   },
   {
     group: "Image",
