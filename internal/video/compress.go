@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"chamelleon/internal/ffmpeg"
@@ -56,6 +57,10 @@ func (s *CompressService) Compress(
 	}
 
 	cmd := exec.CommandContext(ctx, ffmpegPath, args...)
+
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		HideWindow: true,
+	}
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {

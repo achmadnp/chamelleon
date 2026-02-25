@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"chamelleon/internal/ffmpeg"
@@ -57,6 +58,10 @@ func (s *AudioService) Process(
 	s.emitProgress(j, onProgress, true)
 
 	cmd := exec.CommandContext(ctx, ffmpegPath, args...)
+
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		HideWindow: true,
+	}
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {

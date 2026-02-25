@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"chamelleon/internal/ffmpeg"
@@ -129,6 +130,11 @@ func (s *TrimService) runFFmpeg(
 	onDone DoneCallback,
 ) {
 	cmd := exec.CommandContext(ctx, ffmpegPath, args...)
+
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		HideWindow: true,
+	}
+
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		s.fail(j, jobManager, fmt.Errorf("stdout pipe: %w", err), onProgress, onDone)
