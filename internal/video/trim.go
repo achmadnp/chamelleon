@@ -40,12 +40,11 @@ func (s *TrimService) Trim(
 	jobManager.AcquireSemaphore()
 	defer jobManager.ReleaseSemaphore()
 
-	ffmpegPath, err := s.ffmpegManager.ExtractFFmpeg()
+	ffmpegPath, err := s.ffmpegManager.GetFFmpegPath()
 	if err != nil {
 		s.fail(j, jobManager, fmt.Errorf("extract ffmpeg: %w", err), onProgress, onDone)
 		return
 	}
-	defer os.Remove(ffmpegPath)
 
 	j.MarkRunning()
 	s.emit(j, onProgress, true)
@@ -82,12 +81,11 @@ func (s *TrimService) ToGif(
 	jobManager.AcquireSemaphore()
 	defer jobManager.ReleaseSemaphore()
 
-	ffmpegPath, err := s.ffmpegManager.ExtractFFmpeg()
+	ffmpegPath, err := s.ffmpegManager.GetFFmpegPath()
 	if err != nil {
 		s.fail(j, jobManager, fmt.Errorf("extract ffmpeg: %w", err), onProgress, onDone)
 		return
 	}
-	defer os.Remove(ffmpegPath)
 
 	j.MarkRunning()
 	s.emit(j, onProgress, true)

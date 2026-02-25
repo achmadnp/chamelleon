@@ -62,12 +62,11 @@ func (s *ConvertService) Convert(
 	jobManager.AcquireSemaphore()
 	defer jobManager.ReleaseSemaphore()
 
-	ffmpegPath, err := s.ffmpegManager.ExtractFFmpeg()
+	ffmpegPath, err := s.ffmpegManager.GetFFmpegPath()
 	if err != nil {
 		s.finishWithError(j, jobManager, fmt.Errorf("failed to extract ffmpeg: %v", err), onProgress, onDone)
 		return
 	}
-	defer os.Remove(ffmpegPath)
 
 	j.MarkRunning()
 	s.emitProgress(j, onProgress, true)

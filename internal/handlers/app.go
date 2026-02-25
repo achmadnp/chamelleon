@@ -75,7 +75,9 @@ func (a *App) BeforeClose(ctx context.Context) (prevent bool) {
 
 // Shutdown is called at application termination
 func (a *App) Shutdown(ctx context.Context) {
-	// Perform your teardown here
+	if a.ffmpegManager != nil {
+		a.ffmpegManager.Cleanup()
+	}
 }
 
 // HandleSelectFile opens a file dialog and returns the selected file path
@@ -109,11 +111,10 @@ func (a *App) ShowInFolder(path string) error {
 
 // ProbeVideoDuration returns the duration of a video file in milliseconds
 func (a *App) ProbeVideoDuration(path string) (int64, error) {
-	ffmpegPath, err := a.ffmpegManager.ExtractFFmpeg()
+	ffmpegPath, err := a.ffmpegManager.GetFFmpegPath()
 	if err != nil {
 		return 0, fmt.Errorf("failed to extract ffmpeg: %v", err)
 	}
-	defer os.Remove(ffmpegPath)
 
 	durationMS, err := ffmpeg.ProbeDuration(ffmpegPath, path)
 	if err != nil {
@@ -162,11 +163,10 @@ func (a *App) ConvertVideoV2(path string, convertTo string) (string, error) {
 	id := uuid.NewString()
 	outputPath := video.PrepareConvertOutput(path, convertTo)
 
-	ffmpegPath, err := a.ffmpegManager.ExtractFFmpeg()
+	ffmpegPath, err := a.ffmpegManager.GetFFmpegPath()
 	if err != nil {
 		return "", fmt.Errorf("failed to extract ffmpeg: %v", err)
 	}
-	defer os.Remove(ffmpegPath)
 
 	durationMS, err := ffmpeg.ProbeDuration(ffmpegPath, path)
 	if err != nil {
@@ -197,11 +197,10 @@ func (a *App) CompressVideo(path string, logic string) (string, error) {
 
 	outputPath := video.PrepareCompressOutput(path)
 
-	ffmpegPath, err := a.ffmpegManager.ExtractFFmpeg()
+	ffmpegPath, err := a.ffmpegManager.GetFFmpegPath()
 	if err != nil {
 		return "", fmt.Errorf("failed to extract ffmpeg: %v", err)
 	}
-	defer os.Remove(ffmpegPath)
 
 	durationMs, err := ffmpeg.ProbeDuration(ffmpegPath, path)
 	if err != nil {
@@ -332,11 +331,10 @@ func (a *App) TrimVideo(path, startTime, endTime string) (string, error) {
 	id := uuid.NewString()
 	outputPath := video.PrepareTrimOutput(path)
 
-	ffmpegPath, err := a.ffmpegManager.ExtractFFmpeg()
+	ffmpegPath, err := a.ffmpegManager.GetFFmpegPath()
 	if err != nil {
 		return "", fmt.Errorf("failed to extract ffmpeg: %v", err)
 	}
-	defer os.Remove(ffmpegPath)
 
 	durationMS, err := ffmpeg.ProbeDuration(ffmpegPath, path)
 	if err != nil {
@@ -362,11 +360,10 @@ func (a *App) VideoToGif(path, startTime, endTime string, fps, width int) (strin
 	id := uuid.NewString()
 	outputPath := video.PrepareGifOutput(path)
 
-	ffmpegPath, err := a.ffmpegManager.ExtractFFmpeg()
+	ffmpegPath, err := a.ffmpegManager.GetFFmpegPath()
 	if err != nil {
 		return "", fmt.Errorf("failed to extract ffmpeg: %v", err)
 	}
-	defer os.Remove(ffmpegPath)
 
 	durationMS, err := ffmpeg.ProbeDuration(ffmpegPath, path)
 	if err != nil {
@@ -392,11 +389,10 @@ func (a *App) ExtractAudio(path, format string) (string, error) {
 	id := uuid.NewString()
 	outputPath := video.PrepareAudioOutput(path, "audio", format)
 
-	ffmpegPath, err := a.ffmpegManager.ExtractFFmpeg()
+	ffmpegPath, err := a.ffmpegManager.GetFFmpegPath()
 	if err != nil {
 		return "", fmt.Errorf("failed to extract ffmpeg: %v", err)
 	}
-	defer os.Remove(ffmpegPath)
 
 	durationMS, err := ffmpeg.ProbeDuration(ffmpegPath, path)
 	if err != nil {
@@ -426,11 +422,10 @@ func (a *App) MuteVideo(path string) (string, error) {
 	}
 	outputPath := video.PrepareAudioOutput(path, "muted", ext[1:])
 
-	ffmpegPath, err := a.ffmpegManager.ExtractFFmpeg()
+	ffmpegPath, err := a.ffmpegManager.GetFFmpegPath()
 	if err != nil {
 		return "", fmt.Errorf("failed to extract ffmpeg: %v", err)
 	}
-	defer os.Remove(ffmpegPath)
 
 	durationMS, err := ffmpeg.ProbeDuration(ffmpegPath, path)
 	if err != nil {
