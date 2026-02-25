@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -139,7 +138,7 @@ func (s *ConvertService) Convert(
 
 	args = append(args, "-progress", "pipe:1", "-nostats", j.Progress.Output)
 
-	cmd := exec.CommandContext(ctx, ffmpegPath, args...)
+	cmd := execCommandContext(ctx, ffmpegPath, args...)
 
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		HideWindow: true,

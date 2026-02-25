@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -57,7 +56,7 @@ func (s *AudioService) Process(
 	j.MarkRunning()
 	s.emitProgress(j, onProgress, true)
 
-	cmd := exec.CommandContext(ctx, ffmpegPath, args...)
+	cmd := execCommandContext(ctx, ffmpegPath, args...)
 
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		HideWindow: true,

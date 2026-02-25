@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -129,7 +128,7 @@ func (s *TrimService) runFFmpeg(
 	onProgress ProgressCallback,
 	onDone DoneCallback,
 ) {
-	cmd := exec.CommandContext(ctx, ffmpegPath, args...)
+	cmd := execCommandContext(ctx, ffmpegPath, args...)
 
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		HideWindow: true,
