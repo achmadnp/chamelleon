@@ -11,7 +11,7 @@ func TestAudioService_ExtractAudio(t *testing.T) {
 	ffmpegMgr, jobMgr := setupMockDependencies(t)
 	audioService := NewAudioService(ffmpegMgr)
 
-	j, ctx := jobMgr.CreateJob("job-audio", "input.mp4", "output.mp3", 1000)
+	j, ctx := jobMgr.CreateJob("job-audio", "video.mp4", "output.mp3", 1000)
 
 	done := make(chan bool)
 	onProgress := func(p job.Progress, force bool) {}
@@ -35,7 +35,7 @@ func TestAudioService_MuteVideo(t *testing.T) {
 	ffmpegMgr, jobMgr := setupMockDependencies(t)
 	audioService := NewAudioService(ffmpegMgr)
 
-	j, ctx := jobMgr.CreateJob("job-mute", "input.mp4", "output_muted.mp4", 1000)
+	j, ctx := jobMgr.CreateJob("job-mute", "video.mp4", "output_muted.mp4", 1000)
 
 	done := make(chan bool)
 	onProgress := func(p job.Progress, force bool) {}

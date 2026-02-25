@@ -11,7 +11,7 @@ func TestCompressService_Compress(t *testing.T) {
 	ffmpegMgr, jobMgr := setupMockDependencies(t)
 	compressService := NewCompressService(ffmpegMgr)
 
-	j, ctx := jobMgr.CreateJob("job-compress", "input.mp4", "output_compressed.mp4", 1000)
+	j, ctx := jobMgr.CreateJob("job-compress", "video.mp4", "output_compressed.mp4", 1000)
 
 	done := make(chan bool)
 	onProgress := func(p job.Progress, force bool) {}

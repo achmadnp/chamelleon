@@ -25,7 +25,7 @@ func TestNewManager(t *testing.T) {
 
 func TestCreateAndGetJob(t *testing.T) {
 	m := NewManager(2)
-	job, ctx := m.CreateJob("job-1", "input.mp4", "output.mp4", 10000)
+	job, ctx := m.CreateJob("job-1", "video.mp4", "output.mp4", 10000)
 
 	if job.ID != "job-1" {
 		t.Errorf("expected job ID job-1, got %s", job.ID)

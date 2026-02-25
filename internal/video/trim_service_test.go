@@ -11,7 +11,7 @@ func TestTrimService_Trim(t *testing.T) {
 	ffmpegMgr, jobMgr := setupMockDependencies(t)
 	trimService := NewTrimService(ffmpegMgr)
 
-	j, ctx := jobMgr.CreateJob("job-trim", "input.mp4", "output_trimmed.mp4", 1000)
+	j, ctx := jobMgr.CreateJob("job-trim", "video.mp4", "output_trimmed.mp4", 1000)
 
 	done := make(chan bool)
 	onProgress := func(p job.Progress, force bool) {}
@@ -35,7 +35,7 @@ func TestTrimService_ToGif(t *testing.T) {
 	ffmpegMgr, jobMgr := setupMockDependencies(t)
 	trimService := NewTrimService(ffmpegMgr)
 
-	j, ctx := jobMgr.CreateJob("job-gif", "input.mp4", "output.gif", 1000)
+	j, ctx := jobMgr.CreateJob("job-gif", "video.mp4", "output.gif", 1000)
 
 	done := make(chan bool)
 	onProgress := func(p job.Progress, force bool) {}
