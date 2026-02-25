@@ -4,6 +4,7 @@ import { SidebarProvider } from "./components/ui/sidebar";
 import ConvertVideoPage from "./pages/convert-video";
 import CompressVideoPage from "./pages/compress-video";
 import TrimVideoPage from "./pages/trim-video";
+import AudioToolsPage from "./pages/audio-tools";
 import ImageProcessingPage from "./pages/image-processing";
 import ConvertImagePage from "./pages/convert-image";
 import CompressImagePage from "./pages/compress-image";
@@ -18,6 +19,7 @@ function App() {
             <Route path="/" element={<ConvertVideoPage />} />
             <Route path="/compress-video" element={<CompressVideoPage />} />
             <Route path="/trim-video" element={<TrimVideoPage />} />
+            <Route path="/audio-tools" element={<AudioToolsPage />} />
             <Route path="/image-processing" element={<ImageProcessingPage />} />
             <Route path="/convert-image" element={<ConvertImagePage />} />
             <Route path="/compress-image" element={<CompressImagePage />} />

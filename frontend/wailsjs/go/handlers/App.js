@@ -46,6 +46,10 @@ export function EffectImage(arg1, arg2, arg3) {
   return window['go']['handlers']['App']['EffectImage'](arg1, arg2, arg3);
 }
 
+export function ExtractAudio(arg1, arg2) {
+  return window['go']['handlers']['App']['ExtractAudio'](arg1, arg2);
+}
+
 export function GetJob(arg1) {
   return window['go']['handlers']['App']['GetJob'](arg1);
 }
@@ -60,6 +64,10 @@ export function HandleSelectImageFile() {
 
 export function HandleSelectVideoFile() {
   return window['go']['handlers']['App']['HandleSelectVideoFile']();
+}
+
+export function MuteVideo(arg1) {
+  return window['go']['handlers']['App']['MuteVideo'](arg1);
 }
 
 export function ProbeVideoDuration(arg1) {
