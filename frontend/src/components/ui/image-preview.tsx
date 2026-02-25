@@ -1,5 +1,6 @@
 import { TrashIcon } from "lucide-react";
 import { Button } from "./button";
+import { useEffect, useState } from "react";
 
 export function SingleImagePreview({
   image,
@@ -8,8 +9,17 @@ export function SingleImagePreview({
   image: File | { name: string; previewUrl: string };
   onRemove: (image: File | { name: string; previewUrl: string }) => void;
 }) {
-  const previewSrc =
-    image instanceof File ? URL.createObjectURL(image) : image.previewUrl;
+  const [previewSrc, setPreviewSrc] = useState<string>("");
+
+  useEffect(() => {
+    if (image instanceof File) {
+      const url = URL.createObjectURL(image);
+      setPreviewSrc(url);
+      return () => URL.revokeObjectURL(url);
+    } else {
+      setPreviewSrc(image?.previewUrl || "");
+    }
+  }, [image]);
 
   return (
     <div className="flex flex-col items-center space-y-4 border rounded-xl">
@@ -35,8 +45,17 @@ export function ProcessedImagePreview({
   image: File | { name: string; previewUrl: string };
   onSave: (image: File | { name: string; previewUrl: string }) => void;
 }) {
-  const previewSrc =
-    image instanceof File ? URL.createObjectURL(image) : image.previewUrl;
+  const [previewSrc, setPreviewSrc] = useState<string>("");
+
+  useEffect(() => {
+    if (image instanceof File) {
+      const url = URL.createObjectURL(image);
+      setPreviewSrc(url);
+      return () => URL.revokeObjectURL(url);
+    } else {
+      setPreviewSrc(image?.previewUrl || "");
+    }
+  }, [image]);
 
   return (
     <div className="flex flex-col items-center">
