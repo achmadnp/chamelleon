@@ -2,8 +2,6 @@ package image
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 
 	"github.com/anthonynsimon/bild/imgio"
 )
@@ -50,7 +48,7 @@ func (s *FormatService) Save(filename, imageData string) (string, error) {
 		return "", fmt.Errorf("failed to decode image: %v", err)
 	}
 
-	outputPath := filepath.Join(os.TempDir(), filename)
+	outputPath := filename // use the absolute path passed from the dialog
 	if err := imgio.Save(outputPath, img, imgio.PNGEncoder()); err != nil {
 		return "", fmt.Errorf("failed to save processed image: %v", err)
 	}
