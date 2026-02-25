@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { PageShell, SectionCard } from "@/components/ui/page-shell";
 import { useState } from "react";
-import { ConvertImage, SaveAsImage } from "../../wailsjs/go/handlers/App";
+import { ConvertImage, SaveAsImage, ShowInFolder } from "../../wailsjs/go/handlers/App";
 import {
   ArrowRightLeft,
   Download,
@@ -123,7 +123,12 @@ export default function ConvertImagePage() {
       
       const savedPath = await SaveAsImage(defaultName, convertedImg);
       if (savedPath) {
-        toast.success(`Saved to ${savedPath}`);
+        toast.success(`Saved to ${savedPath}`, {
+          action: {
+            label: "Show in Folder",
+            onClick: () => ShowInFolder(savedPath),
+          }
+        });
       }
     } catch (err) {
       toast.error("Failed to save image: " + String(err));

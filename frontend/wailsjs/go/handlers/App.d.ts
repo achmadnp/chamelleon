@@ -39,7 +39,11 @@ export function MuteVideo(arg1:string):Promise<string>;
 
 export function ProbeVideoDuration(arg1:string):Promise<number>;
 
+export function SaveAsImage(arg1:string,arg2:string):Promise<string>;
+
 export function SaveProcessedImage(arg1:string,arg2:string):Promise<string>;
+
+export function ShowInFolder(arg1:string):Promise<void>;
 
 export function TrimVideo(arg1:string,arg2:string,arg3:string):Promise<string>;
 

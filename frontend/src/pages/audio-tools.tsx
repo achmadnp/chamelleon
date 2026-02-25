@@ -5,6 +5,7 @@ import {
   ExtractAudio,
   HandleSelectVideoFile,
   MuteVideo,
+  ShowInFolder,
 } from "../../wailsjs/go/handlers/App";
 import {
   Music,
@@ -15,6 +16,7 @@ import {
   CheckCircle2,
   XCircle,
   VolumeX,
+  Eye,
 } from "lucide-react";
 import { EventsOff, EventsOn } from "../../wailsjs/runtime/runtime";
 import { CircularProgress } from "@/components/ui/progress";
@@ -47,6 +49,7 @@ export default function AudioToolsPage() {
   const [eta, setEta] = useState<number | null>(null);
   const [status, setStatus] = useState("idle");
   const [jobId, setJobId] = useState<string | null>(null);
+  const [outputPath, setOutputPath] = useState<string | null>(null);
   const [durationms, setDurationms] = useState(0);
   const [convertedms, setConvertedms] = useState(0);
 
@@ -78,6 +81,7 @@ export default function AudioToolsPage() {
       setStatus(p.status === "done" ? "done" : "error");
       setProgress(p.status === "done" ? 100 : progress);
       if (p.status === "done") {
+        setOutputPath(p.output);
         toast.success(
           mode === "extract"
             ? "Audio extracted successfully!"
@@ -85,6 +89,10 @@ export default function AudioToolsPage() {
           {
             description: `Output saved to: ${p.output}`,
             duration: 8000,
+            action: {
+              label: "Show in Folder",
+              onClick: () => ShowInFolder(p.output),
+            },
           }
         );
       } else {
@@ -142,6 +150,7 @@ export default function AudioToolsPage() {
     setEta(null);
     setDurationms(0);
     setConvertedms(0);
+    setOutputPath(null);
   };
 
   const canStart = videoPath && status !== "running";
@@ -310,14 +319,30 @@ export default function AudioToolsPage() {
                     : "Error"}
                 </h3>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleDismiss}
-                className="h-7 text-xs"
-              >
-                Dismiss
-              </Button>
+              <div className="flex gap-2">
+                {status === "done" && (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="h-7 text-xs bg-primary/10 hover:bg-primary/20 text-primary border-primary/20"
+                    onClick={async () => {
+                      if (outputPath) {
+                        try {
+                          await ShowInFolder(outputPath);
+                        } catch (err) {
+                           toast.error("Failed to open folder");
+                        }
+                      }
+                    }}
+                  >
+                    <Eye className="w-3.5 h-3.5 mr-1.5" />
+                    Show in Folder
+                  </Button>
+                )}
+                <Button variant="ghost" size="sm" onClick={handleDismiss} className="h-7 text-xs">
+                  Dismiss
+                </Button>
+              </div>
             </div>
 
             <div className="flex items-center gap-6">

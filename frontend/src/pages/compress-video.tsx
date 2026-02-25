@@ -26,6 +26,7 @@ import {
   CancelCompress,
   CompressVideo,
   HandleSelectFile,
+  ShowInFolder,
 } from "../../wailsjs/go/handlers/App";
 
 import { EventsOff, EventsOn } from "../../wailsjs/runtime/runtime";
@@ -84,6 +85,10 @@ export default function CompressVideoPage() {
         toast.success("Compression Succeeded!", {
           description: `Output: ${p.output}`,
           duration: 8000,
+          action: {
+            label: "Show in Folder",
+            onClick: () => ShowInFolder(p.output),
+          },
         });
       } else if (p.status === "cancelled") {
         toast.warning("Compression Cancelled");
@@ -360,16 +365,11 @@ export default function CompressVideoPage() {
                 </h3>
               </div>
               <Button
-                variant={status === "running" ? "destructive" : "ghost"}
+                variant="outline"
                 size="sm"
-                className="h-7 text-xs"
-                onClick={() => {
-                  if (status === "running") {
-                    handleCancelJob(jobId);
-                  } else {
-                    handleDismiss();
-                  }
-                }}
+                onClick={() =>
+                  status === "running" ? handleCancelJob(jobId) : handleDismiss()
+                }
               >
                 {status === "running" ? "Cancel" : "Dismiss"}
               </Button>

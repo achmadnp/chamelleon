@@ -15,7 +15,7 @@ import {
 import { Slider } from "@/components/ui/slider";
 import { PageShell, SectionCard } from "@/components/ui/page-shell";
 import { useState } from "react";
-import { AdjustImage, SaveAsImage } from "../../wailsjs/go/handlers/App";
+import { AdjustImage, SaveAsImage, ShowInFolder } from "../../wailsjs/go/handlers/App";
 import {
   Palette,
   SaveIcon,
@@ -96,7 +96,12 @@ export default function ImageProcessingPage() {
       const savedPath = await SaveAsImage(defaultName, processedImg);
       
       if (savedPath) {
-        toast.success(`Image saved to ${savedPath}`);
+        toast.success(`Image saved to ${savedPath}`, {
+          action: {
+            label: "Show in Folder",
+            onClick: () => ShowInFolder(savedPath),
+          }
+        });
       }
     } catch (err) {
       toast.error("Failed to save image: " + String(err));

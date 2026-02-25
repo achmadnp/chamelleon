@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { PageShell, SectionCard } from "@/components/ui/page-shell";
 import { useState } from "react";
-import { CompressImage, SaveAsImage } from "../../wailsjs/go/handlers/App";
+import { CompressImage, SaveAsImage, ShowInFolder } from "../../wailsjs/go/handlers/App";
 import {
   Download,
   Loader2,
@@ -95,7 +95,12 @@ export default function CompressImagePage() {
       
       const savedPath = await SaveAsImage(defaultName, compressedResult.data);
       if (savedPath) {
-        toast.success(`Saved as ${savedPath}`);
+        toast.success(`Saved as ${savedPath}`, {
+          action: {
+            label: "Show in Folder",
+            onClick: () => ShowInFolder(savedPath),
+          }
+        });
       }
     } catch (err) {
       toast.error("Failed to save image: " + String(err));

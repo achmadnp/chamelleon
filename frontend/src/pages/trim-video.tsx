@@ -9,6 +9,7 @@ import {
   ProbeVideoDuration,
   TrimVideo,
   VideoToGif,
+  ShowInFolder,
 } from "../../wailsjs/go/handlers/App";
 import {
   Scissors,
@@ -111,6 +112,10 @@ export default function TrimVideoPage() {
           {
             description: `Output: ${p.output}`,
             duration: 8000,
+            action: {
+              label: "Show in Folder",
+              onClick: () => ShowInFolder(p.output),
+            },
           }
         );
       } else {

@@ -12,6 +12,7 @@ import { PageShell, SectionCard } from "@/components/ui/page-shell";
 import { useEffect, useState } from "react";
 import {
   ConvertVideoV2,
+  ShowInFolder,
   HandleSelectVideoFile,
 } from "../../wailsjs/go/handlers/App";
 import {
@@ -22,6 +23,7 @@ import {
   CheckCircle2,
   XCircle,
   Upload,
+  Eye,
 } from "lucide-react";
 import { EventsOff, EventsOn } from "../../wailsjs/runtime/runtime";
 import { CircularProgress } from "@/components/ui/progress";
@@ -37,6 +39,7 @@ export default function ConvertVideoPage() {
   const [eta, setEta] = useState<number | null>(null);
   const [status, setStatus] = useState("idle");
   const [jobId, setJobId] = useState<string | null>(null);
+  const [outputPath, setOutputPath] = useState<string | null>(null);
   const [durationms, setDurationms] = useState(0);
   const [convertedms, setConvertedms] = useState(0);
 
@@ -68,9 +71,14 @@ export default function ConvertVideoPage() {
       setStatus(p.status === "done" ? "done" : "error");
       setProgress(p.status === "done" ? [100] : progress);
       if (p.status === "done") {
+        setOutputPath(p.output);
         toast.success("Conversion successful!", {
           description: `Output: ${p.output}`,
           duration: 8000,
+          action: {
+            label: "Show in Folder",
+            onClick: () => ShowInFolder(p.output),
+          },
         });
       } else {
         toast.error("Conversion failed: " + p.error);
@@ -120,6 +128,7 @@ export default function ConvertVideoPage() {
     setEta(null);
     setDurationms(0);
     setConvertedms(0);
+    setOutputPath(null);
   };
 
   const extension = videoPath ? videoPath.split('.').pop()?.toLowerCase() : "";
@@ -240,9 +249,30 @@ export default function ConvertVideoPage() {
                   {status === "running" ? "Converting..." : status === "done" ? "Conversion Complete" : "Error"}
                 </h3>
               </div>
-              <Button variant="ghost" size="sm" onClick={handleDismiss} className="h-7 text-xs">
-                Dismiss
-              </Button>
+              <div className="flex gap-2">
+                {status === "done" && (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="h-7 text-xs bg-primary/10 hover:bg-primary/20 text-primary border-primary/20"
+                    onClick={async () => {
+                      if (outputPath) {
+                        try {
+                          await ShowInFolder(outputPath);
+                        } catch (err) {
+                           toast.error("Failed to open folder");
+                        }
+                      }
+                    }}
+                  >
+                    <Eye className="w-3.5 h-3.5 mr-1.5" />
+                    Show in Folder
+                  </Button>
+                )}
+                <Button variant="ghost" size="sm" onClick={handleDismiss} className="h-7 text-xs">
+                  Dismiss
+                </Button>
+              </div>
             </div>
 
             <div className="flex items-center gap-6">

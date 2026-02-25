@@ -74,8 +74,16 @@ export function ProbeVideoDuration(arg1) {
   return window['go']['handlers']['App']['ProbeVideoDuration'](arg1);
 }
 
+export function SaveAsImage(arg1, arg2) {
+  return window['go']['handlers']['App']['SaveAsImage'](arg1, arg2);
+}
+
 export function SaveProcessedImage(arg1, arg2) {
   return window['go']['handlers']['App']['SaveProcessedImage'](arg1, arg2);
+}
+
+export function ShowInFolder(arg1) {
+  return window['go']['handlers']['App']['ShowInFolder'](arg1);
 }
 
 export function TrimVideo(arg1, arg2, arg3) {

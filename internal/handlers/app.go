@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -88,6 +89,22 @@ func (a *App) HandleSelectFile() (string, error) {
 		return "", fmt.Errorf("failed to show file dialog: %v", err)
 	}
 	return filepath, nil
+}
+
+// ShowInFolder opens the system file explorer and selects the file
+func (a *App) ShowInFolder(path string) error {
+	var cmd *exec.Cmd
+	switch runtimeOS := os.Getenv("GOOS"); runtimeOS { // Note: runtime package is shadowed by Wails runtime
+	case "windows", "":
+		// Windows 'explorer /select,"filepath"' highlights the file in the folder
+		cmd = exec.Command("explorer", "/select,", path)
+	case "darwin":
+		cmd = exec.Command("open", "-R", path)
+	default:
+		// Linux fallback just opens the directory
+		cmd = exec.Command("xdg-open", filepath.Dir(path))
+	}
+	return cmd.Start()
 }
 
 // ProbeVideoDuration returns the duration of a video file in milliseconds
