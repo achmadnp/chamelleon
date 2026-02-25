@@ -19,7 +19,7 @@ import {
   Music,
 } from "lucide-react";
 
-const APP_VERSION = "v1.0.1b";
+const APP_VERSION = "v1.1.0";
 
 const NAV_ITEMS = [
   {
