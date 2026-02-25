@@ -9,14 +9,16 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 var reDuration = regexp.MustCompile(`Duration:\s+(\d+):(\d+):(\d+\.\d+)`)
 
 // Manager handles FFmpeg binary extraction and execution
 type Manager struct {
-	ffmpegFS embed.FS
+	ffmpegFS   embed.FS
 	ffmpegPath string
+	mu         sync.Mutex
 }
 
 // NewManager creates a new FFmpeg manager
@@ -26,8 +28,21 @@ func NewManager(ffmpegFS embed.FS) *Manager {
 	}
 }
 
-// ExtractFFmpeg extracts the embedded FFmpeg binary to a temp file and returns its path
-func (m *Manager) ExtractFFmpeg() (string, error) {
+// GetFFmpegPath extracts the embedded FFmpeg binary if not already extracted,
+// caches its path, and returns it. It is safe for concurrent use.
+func (m *Manager) GetFFmpegPath() (string, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	// If already extracted, ensure the file still exists
+	if m.ffmpegPath != "" {
+		if _, err := os.Stat(m.ffmpegPath); err == nil {
+			return m.ffmpegPath, nil
+		}
+		// If it doesn't exist anymore, we need to extract it again
+		m.ffmpegPath = ""
+	}
+
 	data, err := m.ffmpegFS.ReadFile("ffmpeg.exe")
 	if err != nil {
 		return "", fmt.Errorf("failed to read embedded ffmpeg: %v", err)
@@ -53,11 +68,8 @@ func (m *Manager) ExtractFFmpeg() (string, error) {
 		}
 	}
 
-	if _, err := os.Stat(tmpFile.Name()); err != nil {
-		return "", fmt.Errorf("verification failed: %v", err)
-	}
-
-	return tmpFile.Name(), nil
+	m.ffmpegPath = tmpFile.Name()
+	return m.ffmpegPath, nil
 }
 
 // ProbeDuration gets video duration in milliseconds using FFmpeg
@@ -119,8 +131,11 @@ func GetAvailableHWAccels(ffmpegPath string) ([]string, error) {
 }
 
 // Cleanup removes the extracted FFmpeg binary
-func Cleanup(path string) {
-	if path != "" {
-		os.Remove(path)
+func (m *Manager) Cleanup() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.ffmpegPath != "" {
+		os.Remove(m.ffmpegPath)
+		m.ffmpegPath = ""
 	}
 }
