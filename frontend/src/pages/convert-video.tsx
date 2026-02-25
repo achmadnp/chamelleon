@@ -134,7 +134,7 @@ export default function ConvertVideoPage() {
   return (
     <PageShell
       title="Convert Video"
-      subtitle="Convert between MP4, AVI, MOV, and MKV formats"
+      subtitle="Convert between MP4, AVI, MOV, MKV, and TS formats"
       icon={ArrowRightLeft}
     >
       <div className="space-y-5">
@@ -160,7 +160,7 @@ export default function ConvertVideoPage() {
             <button
               onClick={handleSelectFile}
               disabled={status === "running"}
-              className="flex flex-col items-center justify-center w-full gap-2 p-8 text-sm transition-all duration-200 border-2 border-dashed rounded-xl border-border/50 text-muted-foreground hover:border-primary/50 hover:bg-primary/5 hover:text-foreground disabled:opacity-50"
+              className="flex flex-col items-center justify-center w-full gap-2 p-8 text-sm transition-all duration-200 border-2 border-dashed rounded-xl border-border/50 text-muted-foreground hover:border-primary/5 hover:bg-primary/5 hover:text-foreground disabled:opacity-50"
             >
               <Upload className="w-8 h-8 opacity-40" />
               <span>Click to select a video file</span>
@@ -192,6 +192,7 @@ export default function ConvertVideoPage() {
                 <SelectItem value="avi">AVI — Legacy format</SelectItem>
                 <SelectItem value="mov">MOV — Apple ecosystem</SelectItem>
                 <SelectItem value="mkv">MKV — Flexible container</SelectItem>
+                <SelectItem value="ts">TS — Transport Stream</SelectItem>
               </SelectGroup>
             </SelectContent>
           </Select>

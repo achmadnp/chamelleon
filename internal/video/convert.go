@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"chamelleon/internal/ffmpeg"
@@ -39,6 +40,7 @@ var compatibleVideo = map[string]map[string]bool{
 	"webm": {"vp8": true, "vp9": true, "av1": true},
 	"mkv":  {"h264": true, "hevc": true, "vp8": true, "vp9": true, "av1": true, "mpeg4": true},
 	"mov":  {"h264": true, "hevc": true, "prores": true},
+	"ts":   {"h264": true, "hevc": true, "mpeg2video": true},
 }
 
 var compatibleAudio = map[string]map[string]bool{
@@ -46,6 +48,7 @@ var compatibleAudio = map[string]map[string]bool{
 	"webm": {"opus": true, "vorbis": true},
 	"mkv":  {"aac": true, "ac3": true, "mp3": true, "opus": true, "vorbis": true, "flac": true},
 	"mov":  {"aac": true, "alac": true, "pcm_s16le": true},
+	"ts":   {"aac": true, "ac3": true, "mp3": true, "mp2": true},
 }
 
 // Convert converts a video to a different format
@@ -137,6 +140,10 @@ func (s *ConvertService) Convert(
 	args = append(args, "-progress", "pipe:1", "-nostats", j.Progress.Output)
 
 	cmd := exec.CommandContext(ctx, ffmpegPath, args...)
+
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		HideWindow: true,
+	}
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {

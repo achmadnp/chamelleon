@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"chamelleon/internal/ffmpeg"
 	imgservice "chamelleon/internal/image"
@@ -24,6 +25,7 @@ type App struct {
 	convertService       *video.ConvertService
 	compressService      *video.CompressService
 	trimService          *video.TrimService
+	audioService         *video.AudioService
 	adjustService        *imgservice.AdjustService
 	blendService         *imgservice.BlendService
 	blurService          *imgservice.BlurService
@@ -43,6 +45,7 @@ func NewApp(ffmpegManager *ffmpeg.Manager, maxParallelJobs int) *App {
 		convertService:     video.NewConvertService(ffmpegManager),
 		compressService:    video.NewCompressService(ffmpegManager),
 		trimService:        video.NewTrimService(ffmpegManager),
+		audioService:       video.NewAudioService(ffmpegManager),
 		adjustService:      imgservice.NewAdjustService(),
 		blendService:       imgservice.NewBlendService(),
 		blurService:        imgservice.NewBlurService(),
@@ -106,7 +109,7 @@ func (a *App) HandleSelectVideoFile() (string, error) {
 	filepath, err := runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
 		Title: "Select a video file",
 		Filters: []runtime.FileFilter{
-			{DisplayName: "Video Files (*.mp4, *.avi, *.mov, *.mkv, *.webm, *.flv, *.wmv)", Pattern: "*.mp4;*.avi;*.mov;*.mkv;*.webm;*.flv;*.wmv"},
+			{DisplayName: "Video Files (*.mp4, *.avi, *.mov, *.mkv, *.webm, *.flv, *.wmv, *.ts)", Pattern: "*.mp4;*.avi;*.mov;*.mkv;*.webm;*.flv;*.wmv;*.ts"},
 		},
 	})
 
@@ -325,6 +328,70 @@ func (a *App) VideoToGif(path, startTime, endTime string, fps, width int) (strin
 		},
 		func(progress job.Progress) {
 			runtime.EventsEmit(a.ctx, "gif_done", progress)
+		},
+	)
+
+	return id, nil
+}
+
+// ExtractAudio extracts an audio stream from a video file
+func (a *App) ExtractAudio(path, format string) (string, error) {
+	id := uuid.NewString()
+	outputPath := video.PrepareAudioOutput(path, "audio", format)
+
+	ffmpegPath, err := a.ffmpegManager.ExtractFFmpeg()
+	if err != nil {
+		return "", fmt.Errorf("failed to extract ffmpeg: %v", err)
+	}
+	defer os.Remove(ffmpegPath)
+
+	durationMS, err := ffmpeg.ProbeDuration(ffmpegPath, path)
+	if err != nil {
+		return "", fmt.Errorf("failed to get duration: %w", err)
+	}
+
+	j, ctx := a.jobManager.CreateJob(id, path, outputPath, durationMS)
+
+	go a.audioService.ExtractAudio(ctx, j, a.jobManager, format,
+		func(progress job.Progress, force bool) {
+			runtime.EventsEmit(a.ctx, "audio_progress", progress)
+		},
+		func(progress job.Progress) {
+			runtime.EventsEmit(a.ctx, "audio_done", progress)
+		},
+	)
+
+	return id, nil
+}
+
+// MuteVideo removes the audio stream from a video completely
+func (a *App) MuteVideo(path string) (string, error) {
+	id := uuid.NewString()
+	ext := filepath.Ext(path)
+	if ext == "" {
+		ext = ".mp4"
+	}
+	outputPath := video.PrepareAudioOutput(path, "muted", ext[1:])
+
+	ffmpegPath, err := a.ffmpegManager.ExtractFFmpeg()
+	if err != nil {
+		return "", fmt.Errorf("failed to extract ffmpeg: %v", err)
+	}
+	defer os.Remove(ffmpegPath)
+
+	durationMS, err := ffmpeg.ProbeDuration(ffmpegPath, path)
+	if err != nil {
+		return "", fmt.Errorf("failed to get duration: %w", err)
+	}
+
+	j, ctx := a.jobManager.CreateJob(id, path, outputPath, durationMS)
+
+	go a.audioService.MuteVideo(ctx, j, a.jobManager,
+		func(progress job.Progress, force bool) {
+			runtime.EventsEmit(a.ctx, "audio_progress", progress)
+		},
+		func(progress job.Progress) {
+			runtime.EventsEmit(a.ctx, "audio_done", progress)
 		},
 	)
 
