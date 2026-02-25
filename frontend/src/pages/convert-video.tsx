@@ -122,7 +122,9 @@ export default function ConvertVideoPage() {
     setConvertedms(0);
   };
 
-  const canConvert = fileConfig.format && videoPath && status !== "running";
+  const extension = videoPath ? videoPath.split('.').pop()?.toLowerCase() : "";
+  const isSameFormat = extension === fileConfig.format;
+  const canConvert = fileConfig.format && videoPath && status !== "running" && !isSameFormat;
 
   const formatMs = (ms: number) => {
     if (!ms) return "0s";
@@ -196,6 +198,12 @@ export default function ConvertVideoPage() {
               </SelectGroup>
             </SelectContent>
           </Select>
+          {isSameFormat && (
+            <div className="mt-3 p-3 text-sm text-amber-600 bg-amber-50 dark:text-amber-400 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-900/50 rounded-lg flex items-center gap-2">
+              <span className="font-semibold text-lg">!</span>
+              The selected file is already in this format. Please choose a different target format.
+            </div>
+          )}
         </SectionCard>
 
         {/* Convert Button */}
