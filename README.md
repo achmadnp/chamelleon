@@ -1,7 +1,7 @@
 <div align="center">
   <img src="build/appicon.png" width="128" height="128" alt="Chamelleon Logo" />
   <h1>Chamelleon</h1>
-  <p><strong>Your All-in-One Local Media Shapeshifter 🦎</strong></p>
+  <p><strong>Your All-in-One Local Media Shapeshifter</strong></p>
 </div>
 
 Chamelleon is a modern, fast, and privacy-first desktop application built for manipulating media files. It combines the immense power of tools like FFmpeg and Go image processing libraries with a beautiful, seamless, and user-friendly interface. 
@@ -36,7 +36,7 @@ Chamelleon acts as a "Swiss Army Knife" for media files, split into three main c
 
 ---
 
-## 🚀 How to Run and Build the App
+## How to Run and Build the App
 
 Chamelleon is built using the [Wails framework](https://wails.io/), combining a fast Go backend with a modern React/TypeScript/Vite frontend.
 
