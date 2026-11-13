@@ -14,18 +14,18 @@ Instead of relying on slow cloud converters with file size limits and privacy co
 
 Chamelleon acts as a "Swiss Army Knife" for media files, split into three main categories: Video, Audio, and Image.
 
-### 🎬 Video Tools
+### Video Tools
 * **Smart Video Converter:** Convert videos seamlessly to various formats (MP4, WebM, MKV, MOV).
   * *Smart Engine:* Automatically detects compatible codecs to perform lossless, instant stream-copying when possible.
   * *Hardware Acceleration:* Automatically utilizes your GPU (NVENC, QSV, AMF, VideoToolbox) for up to 10x faster encoding when re-encoding is strictly necessary.
 * **Intelligent Video Compressor:** Dramatically reduce video file sizes with tailored presets. Includes Custom Strategies (Lower Bitrate, Reduce Resolution, etc.) and new **Smart Presets** like "Discord (Under 25MB)" and "Web-Optimized MP4 (Fast Streaming)".
 * **Video Trimmer & GIF Maker:** Easily extract specific, precise segments from a video using a visual time slider. Option to extract lossless clips or generate high-quality optimized GIFs.
 
-### 🎵 Audio Tools
+### Audio Tools
 * **Extract Audio:** Instantly rip the audio track from any video file into a standalone, generic audio file (supports generic Lossy `.mp3` and Lossless `.wav` extraction).
 * **Mute Video:** Need to post a video but strip out the embarrassing background noise? This tool utilizes instant stream copying to remove the audio track flawlessly without re-encoding a single video pixel.
 
-### 🖼️ Image Tools
+### Image Tools
 * **Image Converter:** Drag-and-drop conversion between modern media formats (PNG, JPG/JPEG, WebP, GIF, ICO) without uploading files to the cloud.
 * **Image Compressor:** Shrink image file sizes visually with a live "Before/After" size comparison dashboard. Supports scaling and quality adjustments.
 * **Image Processor:** Perform complex image manipulations including:
@@ -62,7 +62,7 @@ wails build
 
 ---
 
-## 🛠️ Limitations and Known Issues
+## Limitations and Known Issues
 
 While Chamelleon is highly capable, there are a few limitations to keep in mind:
 * **Windows-Centric FFmpeg Embedding:** Currently, the application embeds and extracts `ffmpeg.exe` specifically into the final binary. For macOS and Linux users, the embedding logic requires minor adjustments to handle native `ffmpeg` binaries.
@@ -72,7 +72,7 @@ While Chamelleon is highly capable, there are a few limitations to keep in mind:
 
 ---
 
-## 💻 Tech Stack
+## Tech Stack
 * **Backend Engine:** Go (Golang)
 * **Desktop Bridge:** Wails v2
 * **Frontend:** React, TypeScript, Vite
@@ -81,5 +81,5 @@ While Chamelleon is highly capable, there are a few limitations to keep in mind:
   * Video: Embedded FFmpeg
   * Images: `golang.org/x/image` and `github.com/anthonynsimon/bild`
 
-## ⚖️ License
+## License
 [MIT License](LICENSE)
